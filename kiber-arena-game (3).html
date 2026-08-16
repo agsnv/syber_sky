@@ -76,6 +76,19 @@ button,.card,.modeCard,.pick,.wo,.opt{transition:border-color .15s ease,backgrou
   white-space:nowrap;font-size:9px;font-family:"IBM Plex Mono",monospace;
   letter-spacing:.04em;background:#060A0E;border:1px solid var(--line);
   padding:1px 4px;color:var(--dim);pointer-events:none;z-index:5;}
+.lobby-columns{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:4px;}
+.lobby-col{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:12px;}
+.lobby-col-head{font-family:"Exo 2",sans-serif;font-size:13px;font-weight:700;
+  letter-spacing:.07em;text-transform:uppercase;margin-bottom:10px;}
+.col-a .lobby-col-head{color:var(--ally);}
+.col-b .lobby-col-head{color:var(--foe);}
+.lobby-player{display:flex;flex-direction:column;gap:3px;padding:9px 10px;
+  background:var(--bg);border:1px solid var(--line);border-radius:2px;
+  font-size:13px;margin-bottom:6px;}
+.lobby-player .lp-nick{font-weight:700;}
+.lobby-player .lp-rob{color:var(--dim);font-size:11.5px;}
+.lobby-player.ready .lp-nick::after{content:" ✓";color:var(--ally);}
+@media(max-width:600px){.lobby-columns{grid-template-columns:1fr;}}
 .modePick{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:22px;}
 @media(max-width:700px){.modePick{grid-template-columns:1fr;}}
 .modeCard{background:var(--panel);border:1px solid var(--line);padding:22px;text-align:left;
@@ -454,36 +467,61 @@ button,.card,.modeCard,.pick,.wo,.opt{transition:border-color .15s ease,backgrou
   </div>
 </div>
 
-<!-- ═══ ХОСТ-ЛОББИ ═══ -->
+
+<!-- ═══ ХОСТ: НАСТРОЙКА ═══ -->
 <div id="netHost">
   <header class="hero">
-    <p class="eyebrow">Мультиплеер · хост</p><h1>Создать арену</h1>
+    <p class="eyebrow">Мультиплеер · хост</p><h1>Настройка арены</h1>
   </header>
-  <div class="net-section"><h3>Ваш ник</h3>
+
+  <div class="net-section"><h3>01 · Ваш ник</h3>
     <input class="nick-input" id="hostNick" maxlength="16" placeholder="Введите ник..."></div>
-  <div class="net-section"><h3>Ваш робот</h3>
+
+  <div class="net-section"><h3>02 · Ваш робот</h3>
     <div class="picker" id="hostRobotPick"></div></div>
-  <div class="net-section"><h3>Ваше оружие</h3>
+
+  <div class="net-section" id="hostWepSection"><h3>03 · Оружие</h3>
     <div class="wopts" id="hostWepPick"></div></div>
-  <div class="net-section"><h3>Карта</h3>
+
+  <div class="net-section"><h3>04 · Карта</h3>
     <div class="wopts" id="hostMapPick"></div></div>
-  <div class="net-section"><h3>Запретить роботов (необязательно)</h3>
+
+  <div class="net-section"><h3>05 · Запретить роботов</h3>
+    <p style="font-size:12px;color:var(--dim);margin:0 0 10px">Нажмите чтобы запретить — гости не смогут выбрать.</p>
     <div class="ban-grid" id="hostBanRobots"></div></div>
-  <div class="net-section"><h3>Запретить оружие (необязательно)</h3>
+
+  <div class="net-section"><h3>06 · Запретить оружие</h3>
     <div class="ban-grid" id="hostBanWeapons"></div></div>
-  <div class="net-section"><h3>Прочие ограничения</h3>
-    <div class="ban-grid"><button type="button" id="hostBanUlt" class="ban-btn">ULTIMATE снаряжение</button></div></div>
-  <button class="start" id="hostCreate">Создать лобби</button>
+
+  <div class="net-section"><h3>07 · Запретить ULTIMATE</h3>
+    <p style="font-size:12px;color:var(--dim);margin:0 0 10px">Запретите ULTIMATE-версии конкретных роботов.</p>
+    <div class="ban-grid" id="hostBanUlts"></div></div>
+
+  <button class="start" id="hostCreate">Создать лобби →</button>
   <p id="hostStatus" class="net-status"></p>
-  <div id="hostLobby" style="display:none">
-    <div class="net-section" style="margin-top:16px"><h3>Ссылка-приглашение</h3>
-      <div class="link-box" id="hostLink"></div>
-      <button class="btn" id="hostCopyLink">Скопировать</button></div>
-    <div class="net-section"><h3>Игроки в лобби</h3>
-      <div class="lobby-list" id="hostPlayerList"></div></div>
-    <button class="start" id="hostStart" disabled>Начать бой</button>
-  </div>
   <button class="btn" id="hostBack" style="margin-top:12px">← Назад</button>
+</div>
+
+<!-- ═══ ХОСТ: ЛОББИ (после создания) ═══ -->
+<div id="netLobby" style="display:none">
+  <header class="hero">
+    <p class="eyebrow">Мультиплеер · лобби</p><h1>Ждём игроков</h1>
+  </header>
+  <div class="net-section"><h3>Ссылка-приглашение</h3>
+    <div class="link-box" id="hostLink"></div>
+    <button class="btn" id="hostCopyLink" style="margin-top:8px">Скопировать ссылку</button></div>
+  <div class="lobby-columns">
+    <div class="lobby-col col-a">
+      <div class="lobby-col-head">Команда A</div>
+      <div class="lobby-list" id="lobbyListA"></div>
+    </div>
+    <div class="lobby-col col-b">
+      <div class="lobby-col-head">Команда B</div>
+      <div class="lobby-list" id="lobbyListB"></div>
+    </div>
+  </div>
+  <button class="start" id="hostStart" disabled style="margin-top:16px">Начать бой</button>
+  <button class="btn" id="lobbyBack" style="margin-top:10px">← Назад</button>
 </div>
 
 <!-- ═══ ГОСТЬ-ЛОББИ ═══ -->
@@ -491,19 +529,24 @@ button,.card,.modeCard,.pick,.wo,.opt{transition:border-color .15s ease,backgrou
   <header class="hero">
     <p class="eyebrow">Мультиплеер · гость</p><h1>Присоединиться</h1>
   </header>
-  <div class="net-section"><h3>Ваш ник</h3>
+  <p id="guestStatus" class="net-status" style="margin-bottom:12px"></p>
+
+  <div class="net-section"><h3>01 · Ваш ник</h3>
     <input class="nick-input" id="guestNick" maxlength="16" placeholder="Введите ник..."></div>
-  <div class="net-section"><h3>Команда</h3>
+
+  <div class="net-section"><h3>02 · Команда</h3>
     <div class="team-btn">
       <button id="guestTeamA">Сторона A (синие)</button>
       <button id="guestTeamB">Сторона B (оранжевые)</button>
     </div></div>
-  <div class="net-section" id="guestRobotSection" style="display:none"><h3>Ваш робот</h3>
+
+  <div class="net-section" id="guestRobotSection" style="display:none"><h3>03 · Робот</h3>
     <div class="picker" id="guestRobotPick"></div></div>
-  <div class="net-section" id="guestWepSection" style="display:none"><h3>Оружие</h3>
+
+  <div class="net-section" id="guestWepSection" style="display:none"><h3>04 · Оружие</h3>
     <div class="wopts" id="guestWepPick"></div></div>
+
   <button class="start" id="guestReady" disabled>Готов!</button>
-  <p id="guestStatus" class="net-status"></p>
   <button class="btn" id="guestBack" style="margin-top:12px">← Назад</button>
 </div>
 
@@ -2323,15 +2366,19 @@ const net={
   // ── MESSAGE HANDLER ────────────────────────────────────
   onMessage(msg, fromConn){
     if(msg.type==='hello'){
-      // host receives guest info
       const pid=fromConn.peer;
       if(!net.guests[pid])net.guests[pid]={conn:fromConn};
       Object.assign(net.guests[pid],msg.payload);
       net.guests[pid].conn=fromConn;
       netUpdateHostLobby();
     }
+    else if(msg.type==='lobbyInfo'){
+      // guest received ban settings from host → rebuild picker
+      const s=msg.settings;
+      renderGuestRobotPicker(s.bannedRobots||[],s.bannedUlts||[]);
+      net.guestBans={bannedWeapons:s.bannedWeapons||[],bannedUlts:s.bannedUlts||[]};
+    }
     else if(msg.type==='start'){
-      // guest receives initial state from host
       S=net.deserializeS(msg.S);
       cfg=msg.cfg;
       net.mySide=msg.mySide;
@@ -2339,7 +2386,6 @@ const net={
       netStartBattle();
     }
     else if(msg.type==='action'){
-      // remote player did an action — replay it locally
       netApplyAction(msg);
     }
     else if(msg.type==='endturn'){
@@ -2359,7 +2405,8 @@ const net={
   reset(){
     if(net.peer&&!net.peer.destroyed)net.peer.destroy();
     net.peer=null;net.conn=null;net.role=null;net.mySide=-1;
-    net.guests={};net.active=false;net.nick='';
+    net.guests={};net.active=false;net.nick='';net.guestBans=null;
+    $("netLobby").style.display="none";
   }
 };
 
@@ -2494,9 +2541,29 @@ function netNickLabel(u){
 function showNetHost(){
   $("modeSelect").style.display="none";
   $("netHost").style.display="block";
-  net.lobbySettings={map:'plains',bannedRobots:new Set(),bannedWeapons:new Set(),banUlt:false};
+  net.lobbySettings={map:'plains',bannedRobots:new Set(),bannedWeapons:new Set(),bannedUlts:new Set()};
 
-  // map picker — single select
+  // robot picker
+  const rp=$("hostRobotPick");rp.innerHTML="";
+  net.lobbySettings.robotId=IDS[0];net.lobbySettings.wid=NAT[IDS[0]];
+  IDS.forEach(id=>{
+    const b=R[id];
+    const el=document.createElement("button");el.type="button";
+    el.className="pick"+(id===IDS[0]?" sel":"");
+    el.setAttribute("aria-pressed",String(id===IDS[0]));
+    el.innerHTML='<span class="pickhead"><span class="av">'+ico(id,17)+
+      '</span><span class="pn"><b>'+b.n+'</b><small>'+b.c+'</small></span></span>';
+    el.onclick=()=>{
+      net.lobbySettings.robotId=id;net.lobbySettings.wid=NAT[id];
+      rp.querySelectorAll("button").forEach(x=>{x.classList.remove("sel");x.setAttribute("aria-pressed","false");});
+      el.classList.add("sel");el.setAttribute("aria-pressed","true");
+      renderHostWepPicker(id);
+    };
+    rp.appendChild(el);
+  });
+  renderHostWepPicker(IDS[0]);
+
+  // map picker
   const mp=$("hostMapPick");mp.innerHTML="";
   Object.entries(MAPS).forEach(([k,m])=>{
     const b=document.createElement("button");b.type="button";b.className="wo";
@@ -2509,26 +2576,6 @@ function showNetHost(){
     if(k==="plains"){b.classList.add("sel");b.setAttribute("aria-pressed","true");net.lobbySettings.map="plains";}
     mp.appendChild(b);
   });
-
-  // host robot picker
-  const rp=$("hostRobotPick");rp.innerHTML="";
-  net.lobbySettings.robotId=IDS[0];net.lobbySettings.wid=NAT[IDS[0]];
-  IDS.forEach(id=>{
-    const b2=R[id];
-    const el=document.createElement("button");el.type="button";
-    el.className="pick"+(id===IDS[0]?" sel":"");el.setAttribute("aria-pressed",String(id===IDS[0]));
-    el.innerHTML='<span class="pickhead"><span class="av">'+ico(id,17)+
-      '</span><span class="pn"><b>'+b2.n+'</b><small>'+b2.c+'</small></span></span>';
-    el.onclick=()=>{
-      net.lobbySettings.robotId=id;net.lobbySettings.wid=NAT[id];
-      rp.querySelectorAll("button").forEach(x=>{x.classList.remove("sel");x.setAttribute("aria-pressed","false");});
-      el.classList.add("sel");el.setAttribute("aria-pressed","true");
-      // refresh weapon picker
-      renderHostWepPicker(id);
-    };
-    rp.appendChild(el);
-  });
-  renderHostWepPicker(IDS[0]);
 
   // ban robots
   const br=$("hostBanRobots");br.innerHTML="";
@@ -2554,13 +2601,17 @@ function showNetHost(){
     bw.appendChild(b);
   });
 
-  // ban ult toggle
-  const bu=$("hostBanUlt");
-  bu.className="ban-btn";bu.textContent="ULTIMATE снаряжение";
-  bu.onclick=()=>{
-    net.lobbySettings.banUlt=!net.lobbySettings.banUlt;
-    bu.classList.toggle("banned",net.lobbySettings.banUlt);
-  };
+  // ban ult per robot
+  const bu=$("hostBanUlts");bu.innerHTML="";
+  IDS.forEach(id=>{
+    const b=document.createElement("button");b.type="button";b.className="ban-btn";
+    b.textContent=R[id].n+" ULT";
+    b.onclick=()=>{
+      if(net.lobbySettings.bannedUlts.has(id)){net.lobbySettings.bannedUlts.delete(id);b.classList.remove("banned");}
+      else{net.lobbySettings.bannedUlts.add(id);b.classList.add("banned");}
+    };
+    bu.appendChild(b);
+  });
 }
 
 function renderHostWepPicker(robotId){
@@ -2584,21 +2635,22 @@ function renderHostWepPicker(robotId){
 }
 
 function netUpdateHostLobby(){
-  const list=$("hostPlayerList");list.innerHTML="";
-  // add host himself
-  const hostEl=document.createElement("div");
-  hostEl.className="lobby-player team-a";
-  hostEl.innerHTML='<span class="lp-nick">'+net.nick+' (вы)</span><span class="lp-rob">Сторона A · хост</span>';
-  list.appendChild(hostEl);
-  // add guests
+  // host himself always in team A
+  const hostCard='<div class="lobby-player ready">'+
+    '<span class="lp-nick">'+net.nick+' (вы · хост)</span>'+
+    '<span class="lp-rob">'+R[net.lobbySettings.robotId||IDS[0]].n+
+    ' · '+WPN[net.lobbySettings.wid||NAT[net.lobbySettings.robotId||IDS[0]]].n+'</span></div>';
+  $("lobbyListA").innerHTML=hostCard;
+  $("lobbyListB").innerHTML="";
   let allReady=true;
   Object.values(net.guests).forEach(g=>{
-    const el=document.createElement("div");
-    el.className="lobby-player "+(g.side===0?"team-a":"team-b");
-    const robName=g.robotId?(R[g.robotId]?R[g.robotId].n:g.robotId):'выбирает...';
-    el.innerHTML='<span class="lp-nick">'+(g.nick||'...')+'</span>'+
-      '<span class="lp-rob">Сторона '+(g.side===0?"A":"B")+' · '+robName+'</span>';
-    list.appendChild(el);
+    const robName=g.robotId?(R[g.robotId]?R[g.robotId].n:'?'):'выбирает...';
+    const wName=g.wid?(WPN[g.wid]?WPN[g.wid].n:'?'):'';
+    const card='<div class="lobby-player'+(g.ready?' ready':'')+'">'+
+      '<span class="lp-nick">'+(g.nick||'...')+'</span>'+
+      '<span class="lp-rob">'+robName+(wName?' · '+wName:'')+'</span></div>';
+    if(g.side===0)$("lobbyListA").innerHTML+=card;
+    else $("lobbyListB").innerHTML+=card;
     if(!g.ready)allReady=false;
   });
   $("hostStart").disabled=!(Object.keys(net.guests).length>0&&allReady);
@@ -2625,7 +2677,8 @@ function showNetGuest(roomId){
   });
 }
 
-function renderGuestRobotPicker(bannedRobots){
+function renderGuestRobotPicker(bannedRobots,bannedUlts){
+  bannedUlts=bannedUlts||[];
   $("guestRobotSection").style.display="";
   const pick=$("guestRobotPick");pick.innerHTML="";
   IDS.filter(id=>!bannedRobots.includes(id)).forEach(id=>{
@@ -2638,7 +2691,8 @@ function renderGuestRobotPicker(bannedRobots){
       guestState.robotId=id;guestState.wid=NAT[id];
       pick.querySelectorAll("button").forEach(x=>{x.classList.remove("sel");x.setAttribute("aria-pressed","false");});
       el.classList.add("sel");el.setAttribute("aria-pressed","true");
-      renderGuestWepPicker(id,[]);
+      const bw=(net.guestBans&&net.guestBans.bannedWeapons)||[];
+      renderGuestWepPicker(id,bw,bannedUlts);
       checkGuestReady();
     };
     pick.appendChild(el);
@@ -2681,26 +2735,29 @@ $("pickNet").onclick=()=>{
 };
 
 $("hostBack").onclick=()=>{net.reset();$("netHost").style.display="none";$("modeSelect").style.display="block";};
+$("lobbyBack").onclick=()=>{net.reset();$("netLobby").style.display="none";$("modeSelect").style.display="block";};
 $("guestBack").onclick=()=>{net.reset();$("netGuest").style.display="none";$("modeSelect").style.display="block";};
 
 $("hostCreate").onclick=()=>{
   const nick=$("hostNick").value.trim();
   if(!nick){net.setStatus("hostStatus","Введите ник!","err");return;}
-  net.nick=nick;
-  net.role="host";
-  net.mySide=0;
+  if(!net.lobbySettings.robotId){net.setStatus("hostStatus","Выберите робота!","err");return;}
+  net.nick=nick;net.role="host";net.mySide=0;
   net.setStatus("hostStatus","Создаём лобби...","");
   net.initPeer(id=>{
-    // build invite link
     const url=location.origin+location.pathname+"?room="+id;
     $("hostLink").textContent=url;
-    $("hostLobby").style.display="block";
-    $("hostCreate").style.display="none";
-    net.setStatus("hostStatus","Лобби готово! Ждём гостей.","ok");
+    $("netHost").style.display="none";
+    $("netLobby").style.display="block";
     netUpdateHostLobby();
-    // listen for incoming connections
     net.peer.on("connection",conn=>{
       conn.on("open",()=>{
+        // send lobby settings so guest knows bans
+        conn.send({type:"lobbyInfo",settings:{
+          bannedRobots:[...net.lobbySettings.bannedRobots],
+          bannedWeapons:[...net.lobbySettings.bannedWeapons],
+          bannedUlts:[...net.lobbySettings.bannedUlts]
+        }});
         conn.on("data",msg=>{
           if(msg.type==="hello"){
             net.guests[conn.peer]={conn,nick:msg.payload.nick,side:msg.payload.side,
@@ -2731,27 +2788,25 @@ $("hostStart").onclick=()=>{
     summon:{0:true,1:true},over:false,wrecks:[],orb:{0:1,1:1},strikes:[],
     smoke:[],turrets:[],respawns:[],weather:"clear",cap:{holder:-1,ticks:0}};
   const sA=spawnCells(M,0,1+guests.filter(g=>g.side===0).length);
-  const sB=spawnCells(M,1,1+guests.filter(g=>g.side===1).length);
+  const sB=spawnCells(M,1,guests.filter(g=>g.side===1).length);
   let iA=0,iB=0;
   const hostUnit=mk(hostRobotId,0,sA[iA++]||M.A[0],hostWid);
-  hostUnit.nick=net.nick;
-  S.units.push(hostUnit);
+  hostUnit.nick=net.nick;S.units.push(hostUnit);
   guests.forEach(g=>{
     const side=g.side>=0?g.side:1;
     const sp=side===0?(sA[iA++]||M.A[0]):(sB[iB++]||M.B[0]);
     const gu=mk(g.robotId||IDS[0],side,sp,g.wid||NAT[g.robotId||IDS[0]]);
-    gu.nick=g.nick||"Гость";
-    S.units.push(gu);
+    gu.nick=g.nick||"Гость";S.units.push(gu);
   });
   cfg={mode:"pvp",map:mapKey,size:1,campaign:false,weather:"clear",orb:"barrage",
     bannedRobots:[...net.lobbySettings.bannedRobots],
     bannedWeapons:[...net.lobbySettings.bannedWeapons],
-    banUlt:net.lobbySettings.banUlt};
+    bannedUlts:[...net.lobbySettings.bannedUlts]};
   guests.forEach(g=>{
     g.conn.send({type:"start",S:net.serializeS(S),cfg,mySide:g.side>=0?g.side:1});
   });
-  net.active=true;
-  net.mySide=0;
+  net.active=true;net.mySide=0;
+  $("netLobby").style.display="none";
   netStartBattle();
 };
 
