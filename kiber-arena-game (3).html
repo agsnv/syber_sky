@@ -1,0 +1,3248 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>КИБЕР-АРЕНА</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* Плачущий обсидиан — фоны */
+  --bg:#0E0A16; --bg2:#150F22; --panel:#1A1330; --panel2:#241A40;
+  --line:#3A2A5C; --txt:#E8E2F5; --dim:#A192C4; --faint:#6E5E92;
+  /* Призмарин — союзники */
+  --ally:#4FC3B0; --ally-d:#1E5A54;
+  /* Медь окисленная/свежая — враги */
+  --foe:#D8763C; --foe-d:#6B3418;
+  --ok:#63D8A0; --warn:#D4AF37; --enemy:#E06A4A; --enemy-d:#5E2415;
+  --cell:#120D20; --cellline:#2A1F44;
+  --obs:#4A3A66; --tree:#C77B3E; --chasm:#070410;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{margin:0;padding:0;background:var(--bg);}
+body{color:var(--txt);font-family:"IBM Plex Sans",system-ui,sans-serif;
+  font-size:15px;line-height:1.5;min-height:100vh;
+  background:
+    radial-gradient(ellipse 900px 500px at 50% -10%,#241A40 0%,transparent 60%),
+    repeating-linear-gradient(0deg,rgba(255,255,255,.014) 0 1px,transparent 1px 34px),
+    repeating-linear-gradient(90deg,rgba(255,255,255,.014) 0 1px,transparent 1px 34px),
+    var(--bg);
+  background-attachment:fixed;}
+h1,h2,h3{font-family:"Exo 2",sans-serif;text-transform:uppercase;letter-spacing:.04em;margin:0;font-weight:700;}
+button{font-family:inherit;}
+button,.card,.modeCard,.pick,.wo,.opt{transition:border-color .15s ease,background .15s ease,box-shadow .15s ease,transform .1s ease;}
+.modeCard:active,.wo:active,.pick:active{transform:scale(.985);}
+
+#menu{display:none;max-width:900px;margin:0 auto;padding:26px 16px 70px;}
+#modeSelect{max-width:820px;margin:0 auto;padding:40px 16px 70px;}
+#campaign{display:none;max-width:900px;margin:0 auto;padding:26px 16px 70px;}
+#netHost{display:none;max-width:820px;margin:0 auto;padding:26px 16px 70px;}
+#netGuest{display:none;max-width:820px;margin:0 auto;padding:26px 16px 70px;}
+.net-section{background:var(--panel);border:1px solid var(--line);border-radius:4px;
+  padding:16px;margin-bottom:16px;}
+.net-section h3{font-family:"Exo 2",sans-serif;font-size:14px;letter-spacing:.06em;
+  text-transform:uppercase;margin:0 0 12px;color:var(--dim);}
+.nick-input{background:var(--bg);border:1px solid var(--line);color:var(--ink);
+  font-family:"IBM Plex Sans",sans-serif;font-size:15px;padding:9px 12px;
+  width:100%;box-sizing:border-box;outline:none;border-radius:2px;}
+.nick-input:focus{border-color:var(--ally);}
+.link-box{background:var(--bg);border:1px solid var(--line);padding:10px 12px;
+  font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--ally);
+  word-break:break-all;margin-bottom:10px;border-radius:2px;}
+.lobby-list{display:flex;flex-direction:column;gap:8px;min-height:44px;}
+.lobby-player{display:flex;align-items:center;gap:10px;padding:9px 12px;
+  background:var(--bg);border:1px solid var(--line);border-radius:2px;font-size:13.5px;}
+.lobby-player .av{width:28px;height:28px;flex-shrink:0;}
+.lobby-player .lp-nick{font-weight:700;flex:1;}
+.lobby-player .lp-rob{color:var(--dim);font-size:12px;}
+.lobby-player.team-a{border-color:var(--ally);}
+.lobby-player.team-b{border-color:var(--foe);}
+.team-btn{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
+.team-btn button{padding:10px;font-size:13px;cursor:pointer;border-radius:2px;
+  background:var(--panel);border:1px solid var(--line);color:var(--ink);}
+.team-btn button.on{border-color:var(--ally);background:#0A1F1A;color:var(--ally);}
+.team-btn button.on.b{border-color:var(--foe);background:#1F0F0A;color:var(--foe);}
+.ban-grid{display:flex;flex-wrap:wrap;gap:8px;}
+.ban-btn{padding:5px 10px;font-size:12px;cursor:pointer;border-radius:2px;
+  background:var(--panel);border:1px solid var(--line);color:var(--dim);}
+.ban-btn.banned{background:#1F0A0A;border-color:#7A2020;color:#E07070;
+  text-decoration:line-through;}
+.net-status{font-size:12px;color:var(--dim);margin-top:8px;}
+.net-status.ok{color:var(--ally);}
+.net-status.err{color:var(--foe);}
+.nick-over-tok{position:absolute;bottom:calc(100% + 1px);left:50%;transform:translateX(-50%);
+  white-space:nowrap;font-size:9px;font-family:"IBM Plex Mono",monospace;
+  letter-spacing:.04em;background:#060A0E;border:1px solid var(--line);
+  padding:1px 4px;color:var(--dim);pointer-events:none;z-index:5;}
+.lobby-columns{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:4px;}
+.lobby-col{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:12px;}
+.lobby-col-head{font-family:"Exo 2",sans-serif;font-size:13px;font-weight:700;
+  letter-spacing:.07em;text-transform:uppercase;margin-bottom:10px;}
+.col-a .lobby-col-head{color:var(--ally);}
+.col-b .lobby-col-head{color:var(--foe);}
+.lobby-player{display:flex;flex-direction:column;gap:3px;padding:9px 10px;
+  background:var(--bg);border:1px solid var(--line);border-radius:2px;
+  font-size:13px;margin-bottom:6px;}
+.lobby-player .lp-nick{font-weight:700;}
+.lobby-player .lp-rob{color:var(--dim);font-size:11.5px;}
+.lobby-player.ready .lp-nick::after{content:" ✓";color:var(--ally);}
+@media(max-width:600px){.lobby-columns{grid-template-columns:1fr;}}
+.modePick{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:22px;}
+@media(max-width:700px){.modePick{grid-template-columns:1fr;}}
+.modeCard{background:var(--panel);border:1px solid var(--line);padding:22px;text-align:left;
+  color:var(--ink);cursor:pointer;border-radius:2px;}
+.modeCard:hover{border-color:var(--ally);}
+.modeCard h2{font-family:"Exo 2",sans-serif;letter-spacing:.04em;margin-bottom:8px;}
+.modeCard p{color:var(--faint);font-size:13.5px;line-height:1.5;margin:0;}
+.pick.ultcard{background:#05050A;border:1px solid #3A2A5C;position:relative;overflow:hidden;
+  padding:14px 16px;}
+.pick.ultcard::before{content:"";position:absolute;inset:6px;border:2px solid #C9A227;
+  pointer-events:none;}
+.pick.ultcard[aria-pressed="true"]{border-color:#4FC3B0;}
+.pick.ultcard[aria-pressed="true"]::before{border-color:#D4AF37;
+  box-shadow:0 0 10px #D4AF3755;}
+.pick.ultcard .av{background:#2A2109;border-color:#B8912F;color:#D4AF37;}
+.pick.ultcard .pn b{color:#D4AF37;}
+.subhead{font-family:"Exo 2",sans-serif;text-transform:uppercase;letter-spacing:.08em;
+  font-size:11px;color:#D4AF37;margin:16px 0 8px;padding-bottom:5px;border-bottom:1px solid #6E5518;}
+.ulttag{font-style:normal;font-family:"IBM Plex Mono",monospace;font-size:9px;letter-spacing:.1em;
+  color:#0B0A06;background:#D4AF37;padding:1px 4px;vertical-align:middle;}
+.ulthex{position:absolute;right:18px;bottom:2px;pointer-events:none;
+  display:flex;align-items:flex-end;gap:2px;z-index:2;}
+.ulthex i{display:block;background:#05050A;border:2px solid #C9A227;
+  clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);}
+.ulthex i:nth-child(1){width:14px;height:16px;margin-bottom:6px;}
+.ulthex i:nth-child(2){width:20px;height:23px;margin-bottom:9px;}
+.ulthex i:nth-child(3){width:17px;height:19px;margin-bottom:1px;}
+.wo.woult{background:#0B0A06;border-color:#B8912F;}
+.wo.woult[aria-pressed="true"]{border-color:#D4AF37;background:#14110A;}
+.wo.woult b{color:#D4AF37;}
+.wo .wtrait{color:#7FB4D8;display:block;margin-top:2px;}
+.wo.woult .wtrait{color:#D4AF37;}
+.reward{margin:0 0 18px;padding:12px 16px;border:1px solid #B8912F;background:#14110A;
+  display:flex;flex-direction:column;gap:3px;}
+.reward b{font-family:"Exo 2",sans-serif;text-transform:uppercase;letter-spacing:.07em;font-size:11px;color:#D4AF37;}
+.reward span{font-size:14px;color:var(--txt);}
+.reward.r-robot{border-color:var(--ally);background:#0C1A1A;}
+.reward.r-robot b{color:var(--ally);}
+.ulttoggle{margin-top:12px;width:100%;text-align:left;cursor:pointer;padding:11px 14px;
+  background:#0B0A06;border:1px solid #B8912F;color:var(--txt);display:flex;flex-direction:column;gap:2px;}
+.ulttoggle b{font-family:"Exo 2",sans-serif;letter-spacing:.08em;color:#D4AF37;font-size:13px;}
+.ulttoggle small{color:var(--dim);font-size:11.5px;}
+.ulttoggle.on{background:#14110A;border-color:#D4AF37;box-shadow:inset 0 0 0 1px #D4AF37;}
+.pick.hasult{border-color:#7A6220;}
+.wrow.ultrow{border-color:#B8912F;background:#0B0A06;}
+.wrow.ultrow h4{color:#D4AF37;}
+.ult{position:relative;}
+.ult::after{content:"ULTIMATE";position:absolute;top:-8px;right:-6px;font-size:9px;
+  font-weight:700;letter-spacing:.06em;padding:2px 5px;color:#151204;
+  background:repeating-linear-gradient(45deg,#D4AF37 0 6px,#151204 6px 12px);}
+.tok.ultglow{background:#141006 !important;box-shadow:inset 0 0 0 2px #D4AF37,0 0 10px 2px #D4AF3766;}
+.tok.ultglow svg{color:#D4AF37;}
+.tok.ultglow .hpb i{background:#D4AF37;}
+.tok.a.ultglow .hpb{outline:1px solid var(--ally);}
+.tok.b.ultglow .hpb{outline:1px solid var(--foe);}
+.tok.frozen{box-shadow:0 0 0 2px #7FD8F5,0 0 12px 3px #7FD8F566;filter:saturate(.5) brightness(1.15);}
+.hero{position:relative;overflow:hidden;padding:40px 32px 34px;
+  background:linear-gradient(160deg,#150F22 0%,#0E0A16 100%);border:1px solid var(--line);}
+.hero::after{content:"";position:absolute;right:-70px;top:-70px;width:300px;height:300px;
+  border:1px solid #2A1F44;border-radius:50%;box-shadow:0 0 0 40px #1A133033,0 0 0 80px #1A13301A;}
+.eyebrow{position:relative;font-family:"IBM Plex Mono",monospace;font-size:11px;
+  letter-spacing:.34em;color:var(--foe);margin:0 0 16px;text-transform:uppercase;}
+.hero h1{position:relative;font-size:clamp(40px,10vw,76px);font-weight:800;line-height:.9;}
+.hero h1 i{font-style:normal;color:var(--faint);}
+.hero p{position:relative;margin:16px 0 0;color:var(--dim);max-width:46ch;}
+
+.step{margin-top:18px;background:var(--panel);border:1px solid var(--line);padding:19px 21px 21px;}
+.step-h{display:flex;align-items:center;gap:12px;margin-bottom:15px;}
+.step-n{font-family:"IBM Plex Mono",monospace;font-size:11px;font-weight:600;
+  letter-spacing:.12em;color:var(--foe);border:1px solid var(--foe-d);padding:3px 7px;}
+.step h2{font-size:16px;}
+.step-note{margin-left:auto;font-size:12.5px;color:var(--faint);}
+
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:9px;}
+.opt{border:1px solid var(--line);background:var(--bg2);padding:13px 14px;cursor:pointer;
+  text-align:left;color:var(--txt);transition:.13s;}
+.opt:hover:not(:disabled){border-color:var(--faint);background:var(--panel2);}
+.opt:focus-visible{outline:2px solid var(--ally);outline-offset:2px;}
+.opt b{display:block;font-family:"Exo 2",sans-serif;font-weight:600;font-size:13.5px;
+  text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px;}
+.opt small{color:var(--dim);font-size:12.5px;line-height:1.4;display:block;}
+.opt[aria-pressed="true"]{border-color:var(--foe);background:#241811;}
+.opt[aria-pressed="true"] b{color:var(--foe);}
+.opt:disabled{opacity:.3;cursor:not-allowed;}
+
+.picker{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;}
+.pick{display:flex;flex-direction:column;gap:9px;align-items:stretch;border:1px solid var(--line);background:var(--bg2);
+  padding:9px 11px;cursor:pointer;color:var(--txt);text-align:left;transition:.13s;width:100%;}
+.pick:hover:not(:disabled){border-color:var(--faint);}
+.pick[aria-pressed="true"]{border-color:var(--ally);background:#123E38;}
+.pick:disabled{opacity:.32;cursor:not-allowed;}
+.pick .av{width:26px;height:26px;flex:none;display:grid;place-items:center;
+  background:var(--ally-d);color:#CFE6F7;border:1px solid #2E6E9E;}
+.pick[aria-pressed="true"] .av{background:var(--ally);color:#04121C;}
+.pick .pn{min-width:0;}
+.pick .pn b{display:block;font-size:13px;font-weight:600;}
+.pick .pn small{display:block;color:var(--dim);font-size:11.5px;font-family:"IBM Plex Mono",monospace;}
+
+.start{margin-top:20px;width:100%;padding:17px;border:1px solid var(--foe);background:var(--foe);
+  color:#120802;font-family:"Exo 2",sans-serif;font-weight:800;font-size:16px;
+  text-transform:uppercase;letter-spacing:.12em;cursor:pointer;}
+.start:hover:not(:disabled){background:#FF8148;}
+.start:disabled{background:transparent;color:var(--faint);border-color:var(--line);cursor:not-allowed;}
+
+#game{display:none;max-width:1240px;margin:0 auto;padding:12px 12px 40px;}
+.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;
+  background:var(--panel);border:1px solid var(--line);padding:9px 13px;
+  position:sticky;top:0;z-index:50;box-shadow:0 5px 16px rgba(6,10,16,.5);}
+.turnpill{font-family:"Exo 2",sans-serif;font-weight:700;font-size:12.5px;
+  text-transform:uppercase;letter-spacing:.08em;padding:5px 11px;color:#07121B;}
+.pa{background:var(--ally);}.pb{background:var(--enemy);}
+.meta{font-family:"IBM Plex Mono",monospace;font-size:11.5px;letter-spacing:.07em;color:var(--dim);}
+.meta b{color:var(--txt);}
+.bar .sp{margin-left:auto;display:flex;gap:8px;}
+.btn{border:1px solid var(--line);background:var(--bg2);color:var(--txt);padding:8px 13px;
+  cursor:pointer;font-family:"Exo 2",sans-serif;font-weight:600;font-size:12px;
+  text-transform:uppercase;letter-spacing:.06em;}
+.btn:hover:not(:disabled){border-color:var(--faint);}
+.btn:disabled{opacity:.35;cursor:not-allowed;}
+.btn.go{background:var(--ok);border-color:var(--ok);color:#04160C;}
+.btn.go:hover{background:#65E3A0;}
+
+.hintbar{display:none;margin-top:10px;padding:10px 14px;border:1px solid var(--ally);
+  background:#0F2130;font-size:13.5px;align-items:center;gap:12px;}
+.hintbar.on{display:flex;}
+.hintbar.fire{border-color:var(--foe);background:#241611;}
+.hintbar.abil{border-color:var(--warn);background:#241E0E;}
+.hintbar b{font-family:"Exo 2",sans-serif;text-transform:uppercase;letter-spacing:.06em;font-size:12.5px;}
+.hintbar .x{margin-left:auto;}
+
+.wrap{display:grid;grid-template-columns:minmax(0,1fr) 296px;gap:12px;margin-top:12px;align-items:start;}
+@media(max-width:940px){.wrap{grid-template-columns:1fr;}
+  body{padding-bottom:44vh;}
+  #actionCard{position:fixed;left:0;right:0;bottom:0;z-index:80;margin:0;
+    max-height:42vh;overflow:auto;border-radius:0;
+    border:1px solid var(--line);border-bottom:none;
+    box-shadow:0 -10px 26px rgba(0,0,0,.55);}
+}
+
+.mapbox{background:var(--panel);border:1px solid var(--line);padding:8px;overflow:hidden;}
+#tutbox{position:fixed;left:0;right:0;bottom:0;z-index:90;display:none;
+  background:linear-gradient(0deg,#0A1420,#0E1B2A);border-top:2px solid var(--ally);
+  box-shadow:0 -10px 30px rgba(0,0,0,.6);padding:14px 18px;}
+#tutbox.on{display:block;}
+.tutinner{max-width:640px;margin:0 auto;display:flex;align-items:center;gap:14px;}
+.tutinner p{margin:0;flex:1;font-size:14px;line-height:1.5;}
+.tutstep{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--ally);
+  border:1px solid var(--ally);padding:3px 7px;flex:none;}
+.bx.letter{max-width:480px;text-align:left;border-left:3px solid var(--warn);}
+.bx.letter h2{margin:4px 0 14px;}
+.bx.letter p{line-height:1.55;}
+#rainFX{position:absolute;inset:14px;pointer-events:none;z-index:30;
+  background-image:repeating-linear-gradient(112deg,rgba(160,190,220,.16) 0 1px,transparent 1px 13px);
+  background-size:100% 130px;animation:rainfall .45s linear infinite;
+  box-shadow:inset 0 0 90px 10px rgba(10,16,26,.55);mix-blend-mode:screen;}
+@keyframes rainfall{from{background-position:0 0;}to{background-position:-38px 130px;}}
+#board{display:grid;width:100%;margin:0 auto;border:1px solid var(--line);
+  background:var(--cellline);gap:1px;}
+.cell{position:relative;background:var(--cell);display:grid;place-items:center;aspect-ratio:1;min-width:0;}
+.cell.obs{background:transparent;position:relative;}
+.cell.obs::before{content:"";position:absolute;inset:7%;border-radius:1px;
+  background:linear-gradient(135deg,#57477A,#3E3058);border:1.5px solid #17102A;
+  box-shadow:inset -2px -2px 0 rgba(0,0,0,0.3),inset 2px 2px 0 rgba(255,255,255,0.10);}
+.cell.obs::after{content:"";position:absolute;left:7%;right:7%;bottom:7%;height:28%;
+  box-sizing:border-box;border:1.5px solid #17102A;
+  background:repeating-linear-gradient(-45deg,#17102A 0 3px,#5C4C82 3px 6px);}
+.cell.tree{background:#3A2812;position:relative;opacity:1;
+  box-shadow:inset -3px -3px 0 0 rgba(0,0,0,0.35);}
+.cell.tree::before{content:"";position:absolute;left:8%;top:6%;width:84%;height:84%;
+  background:radial-gradient(circle at 40% 35%,#8A5A2A 0%,#5A3A1A 55%,#3A2812 100%);
+  border-radius:50%;box-shadow:inset -2px -2px 0 0 rgba(0,0,0,0.35),inset 2px 2px 0 0 rgba(255,220,180,0.15);}
+.cell.tree::after{content:"";position:absolute;left:38%;top:20%;width:12%;height:15%;
+  background:#B8865A;border-radius:40%;opacity:.7;}
+.cell.breach{background:#252D37;}
+
+.cell.fog{background:#080C11;opacity:.55;}
+.cell.beamBlue{background:linear-gradient(#BFE9FF33,#BFE9FF33);
+  box-shadow:inset 0 0 0 2px #FFFFFFCC,0 0 10px 1px #7FD8F5AA;animation:beampulse 1s ease-in-out infinite;}
+.cell.beamGold{background:linear-gradient(#F5D97A33,#F5D97A33);
+  box-shadow:inset 0 0 0 2px #FFE9A8CC,0 0 10px 1px #D4AF37CC;animation:beampulse 1s ease-in-out infinite;}
+.cell.beamHitBlue{box-shadow:inset 0 0 0 3px #7FD8F5,0 0 14px 3px #7FD8F5AA;}
+.cell.beamHitGold{box-shadow:inset 0 0 0 3px #D4AF37,0 0 14px 3px #D4AF37AA;}
+@keyframes beampulse{0%,100%{opacity:.6;}50%{opacity:1;}}
+.cell.aimline{box-shadow:inset 0 0 0 2px #E4574B;}
+.tok.flying{outline:2px dashed #D4AF37;outline-offset:2px;}
+.cell.chasm{background:var(--chasm);box-shadow:inset 0 0 9px #000;}
+.cell.zone{background:#1A2430;box-shadow:inset 0 0 0 1px #2E4356;}
+.cell.zone.cap-a{background:#0A1F1A;box-shadow:inset 0 0 0 2px var(--ally);}
+.cell.zone.cap-b{background:#1F0F0A;box-shadow:inset 0 0 0 2px var(--foe);}
+.cell.zone.contested{background:#1A1510;box-shadow:inset 0 0 0 2px #7A6820;}
+#capBar{display:none;align-items:center;gap:8px;padding:5px 12px;
+  background:var(--panel);border-bottom:1px solid var(--line);font-size:12px;color:var(--dim);flex-shrink:0;}
+#capBar.on{display:flex;}
+#capLblA{color:var(--ally);font-weight:700;min-width:16px;text-align:right;}
+#capLblB{color:var(--foe);font-weight:700;min-width:16px;}
+#capTrack{flex:1;height:7px;background:#0A0A12;border-radius:4px;overflow:hidden;position:relative;}
+#capFillA{position:absolute;left:0;top:0;height:100%;background:var(--ally);border-radius:4px 0 0 4px;transition:width .35s;}
+#capFillB{position:absolute;right:0;top:0;height:100%;background:var(--foe);border-radius:0 4px 4px 0;transition:width .35s;}
+.cell.dome{box-shadow:inset 0 0 0 2px var(--ally);}
+.cell.mine::after{content:"";position:absolute;width:6px;height:6px;background:var(--foe);transform:rotate(45deg);}
+.cell.turretA::after,.cell.turretB::after{content:"";position:absolute;width:60%;height:60%;
+  border-radius:2px;box-sizing:border-box;}
+.cell.turretA::after{background:var(--ally-d);border:2px solid var(--ally);}
+.cell.turretB::after{background:var(--foe-d);border:2px solid var(--foe);}
+.cell.mark::after{content:"";position:absolute;width:9px;height:9px;border:2px solid var(--ally);border-radius:50%;}
+.cell.can{cursor:pointer;}
+.cell.can-move{background:#14283A;box-shadow:inset 0 0 0 1px #2F6491;}
+.cell.can-move:hover{background:#1E4362;}
+.cell.can-fire{box-shadow:inset 0 0 0 2px var(--foe);}
+.cell.can-fire:hover{background:#2A1710;}
+.cell.can-abil{background:#2A2410;box-shadow:inset 0 0 0 1px var(--warn);}
+.cell.can-abil:hover{background:#3A310F;}
+
+.tok.big{width:100%;height:100%;}
+.tok{width:100%;height:100%;display:grid;place-items:center;position:relative;cursor:pointer;}
+.tok.a{color:var(--ally);}
+.tok.b{color:var(--enemy);}
+.tok.sel::before{content:"";position:absolute;inset:1px;border:1.5px solid var(--txt);
+  border-radius:2px;opacity:.9;}
+.tok.spent{opacity:.4;}
+.tok.hid{opacity:.45;border:1px dashed #ffffff66;}
+.tok .hpb{position:absolute;left:12%;right:12%;bottom:1px;height:2px;background:#ffffff1f;}
+.tok .hpb i{display:block;height:100%;background:currentColor;}
+.pips{position:absolute;top:-3px;right:-3px;display:flex;gap:1px;}
+.pips i{width:4px;height:4px;background:var(--ok);}
+.pips{top:0;right:0;}
+.pips i.off{background:#00000099;}
+
+.card{background:var(--panel);border:1px solid var(--line);padding:14px 15px;}
+.card+.card{margin-top:10px;}
+.card h3{font-size:11.5px;letter-spacing:.14em;color:var(--faint);margin-bottom:11px;}
+.rname{font-family:"Exo 2",sans-serif;font-weight:700;font-size:17px;text-transform:uppercase;}
+.rcls{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--dim);letter-spacing:.07em;margin-bottom:11px;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);
+  border:1px solid var(--line);margin-bottom:12px;}
+.grid2 div{background:var(--bg2);padding:7px 9px;}
+.grid2 .k{display:block;font-family:"IBM Plex Mono",monospace;font-size:9px;
+  letter-spacing:.1em;color:var(--faint);text-transform:uppercase;}
+.grid2 .v{font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:15px;}
+.wpn{font-size:12.5px;color:var(--dim);margin-bottom:12px;line-height:1.45;}
+.wpn b{color:var(--txt);font-weight:600;}
+
+.acts{display:grid;gap:7px;}
+.act{display:flex;align-items:center;gap:10px;width:100%;padding:11px 12px;
+  border:1px solid var(--line);background:var(--bg2);color:var(--txt);cursor:pointer;text-align:left;}
+.act:hover:not(:disabled){border-color:var(--faint);}
+.act:disabled{opacity:.32;cursor:not-allowed;}
+.act .ico{width:22px;height:22px;flex:none;display:grid;place-items:center;
+  font-family:"IBM Plex Mono",monospace;font-size:12px;font-weight:700;border:1px solid currentColor;}
+.act .lbl{min-width:0;}
+.act .lbl b{display:block;font-family:"Exo 2",sans-serif;font-weight:600;font-size:12.5px;
+  text-transform:uppercase;letter-spacing:.05em;}
+.act .lbl small{display:block;color:var(--dim);font-size:11.5px;line-height:1.35;}
+.act.m .ico{color:var(--ally);}.act.f .ico{color:var(--foe);}.act.k .ico{color:var(--warn);}
+.act.m.on{background:#16222E;border-color:var(--ally);}
+.act.f.on{background:#241611;border-color:var(--foe);}
+.act.k.on{background:#241E0E;border-color:var(--warn);}
+
+.rl{display:grid;gap:4px;}
+.rr{display:flex;align-items:center;gap:8px;padding:6px 8px;border:1px solid var(--line);
+  background:var(--bg2);font-size:12.5px;cursor:pointer;}
+.rr.dead{opacity:.3;text-decoration:line-through;cursor:default;}
+.rr .d{width:14px;height:14px;flex:none;display:grid;place-items:center;}
+.rr .n{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.rr .h{font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:12px;}
+
+#log{height:170px;overflow-y:auto;font-family:"IBM Plex Mono",monospace;font-size:11px;
+  line-height:1.65;background:var(--bg);border:1px solid var(--line);padding:8px 10px;}
+#log p{margin:0 0 2px;color:var(--dim);}
+#log .h{color:var(--foe);}#log .g{color:var(--ok);}#log .k{color:var(--foe);font-weight:700;}
+
+.over{position:fixed;inset:0;background:#060A0Ef2;display:none;place-items:center;z-index:60;padding:20px;}
+.over.on{display:grid;}
+.over .bx{background:var(--panel);border:1px solid var(--line);padding:34px 36px;max-width:400px;text-align:center;}
+.over h2{font-size:26px;font-weight:800;margin-bottom:10px;}
+.over p{color:var(--dim);margin:0 0 20px;}
+.cell.wreck::before{content:"";position:absolute;width:60%;height:60%;
+  background:repeating-linear-gradient(45deg,#8A95A5 0 2px,transparent 2px 4px);
+  border:1px solid #8A95A5;}
+.cell.strike{box-shadow:inset 0 0 0 2px var(--foe),inset 0 0 12px #F2703A66;}
+.cell.strike::after{content:"";position:absolute;width:56%;height:56%;
+  border:2px solid var(--foe);border-radius:50%;}
+.cell.smoke{background:#4A3A66;opacity:.92;}
+.cell.can-orb{box-shadow:inset 0 0 0 2px var(--warn);cursor:pointer;}
+.cell.can-orb:hover{background:#3A310F;}
+.hintbar.orb{border-color:var(--warn);background:#241E0E;}
+
+.pstats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:var(--line);
+  border:1px solid var(--line);margin-top:0;width:100%;min-width:0;}
+.pstats div{background:var(--bg);padding:4px 3px;text-align:center;min-width:0;overflow:hidden;}
+.pstats .k{display:block;font-family:"IBM Plex Mono",monospace;font-size:8.5px;
+  letter-spacing:.04em;color:var(--faint);text-transform:uppercase;white-space:nowrap;}
+.pstats .v{font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:13px;}
+.pickhead{display:flex;gap:10px;align-items:center;min-width:0;}
+.wrow{border:1px solid var(--line);background:var(--bg2);padding:11px 13px;margin-bottom:8px;}
+.wrow h4{margin:0 0 8px;font-family:"Exo 2",sans-serif;font-size:13px;text-transform:uppercase;
+  letter-spacing:.05em;font-weight:600;}
+.wopts{display:flex;flex-wrap:wrap;gap:6px;}
+.wo{border:1px solid var(--line);background:var(--bg);color:var(--dim);padding:6px 9px;
+  cursor:pointer;font-size:12px;text-align:left;}
+.wo:hover{border-color:var(--faint);color:var(--txt);}
+.wo[aria-pressed="true"]{border-color:var(--ally);background:#123E38;color:var(--txt);}
+.wo b{display:block;font-size:12.5px;font-weight:600;}
+.wo small{font-family:"IBM Plex Mono",monospace;font-size:10.5px;color:var(--faint);}
+.legend{display:flex;flex-wrap:wrap;gap:7px 16px;margin-top:12px;padding-top:11px;
+  border-top:1px solid var(--line);font-size:12px;color:var(--dim);}
+.legend span{display:inline-flex;align-items:center;gap:6px;}
+.legend i{width:13px;height:13px;display:inline-block;border:1px solid #ffffff22;}
+.cell.wreck::after{content:"";position:absolute;width:60%;height:60%;
+  background:repeating-linear-gradient(45deg,#C8A24A,#C8A24A 2px,transparent 2px,transparent 4px);
+  border:1px solid #C8A24A;}
+.cell.strike{box-shadow:inset 0 0 0 2px #E04A4A;}
+.cell.strike::before{content:"✕";position:absolute;color:#E04A4A;font-weight:700;font-size:13px;}
+.cell.smoke{background:#3A2A5C;opacity:.92;}
+.orbtag{font-family:"IBM Plex Mono",monospace;font-size:11.5px;letter-spacing:.06em;
+  color:#C8A24A;border:1px solid #6B5522;padding:3px 8px;}
+
+.cell.wreck::after{content:"";position:absolute;width:60%;height:60%;
+  background:repeating-linear-gradient(45deg,#8A95A5 0 2px,transparent 2px 4px);
+  border:1px solid #8A95A5;}
+.cell.strike{box-shadow:inset 0 0 0 2px #D4AF37;background:#2A2410;}
+.cell.strike::after{content:"◎";position:absolute;color:#D4AF37;font-size:13px;font-weight:700;}
+.cell.smoke{background:#4A3A66;opacity:.92;}
+.cell.can-orb{box-shadow:inset 0 0 0 1px #D4AF37;background:#241E0E;cursor:pointer;}
+.cell.can-orb:hover{background:#3A310F;}
+.orbtag{font-family:"IBM Plex Mono",monospace;font-size:11.5px;letter-spacing:.06em;
+  color:#D4AF37;border:1px solid #5B4A18;padding:4px 9px;}
+
+.cell.wreck::before{content:"";position:absolute;width:11px;height:11px;
+  background:var(--warn);clip-path:polygon(50% 0,100% 38%,82% 100%,18% 100%,0 38%);opacity:.9;}
+.cell.strike{box-shadow:inset 0 0 0 2px var(--warn);}
+.cell.strike::after{content:"✕";position:absolute;color:var(--warn);
+  font-family:"IBM Plex Mono",monospace;font-weight:700;font-size:13px;}
+.cell.smoke{background:#241A40;opacity:.92;}
+.cell.can-orb{box-shadow:inset 0 0 0 2px var(--warn);cursor:pointer;}
+.cell.can-orb:hover{background:#3A310F;}
+.chg{font-family:"IBM Plex Mono",monospace;font-size:11.5px;letter-spacing:.07em;
+  color:var(--warn);border:1px solid var(--warn);padding:3px 8px;}
+
+.cell.wreck::after{content:"";position:absolute;width:60%;height:60%;
+  background:repeating-linear-gradient(45deg,#6E5E92 0 2px,transparent 2px 4px);
+  border:1px solid #A192C4;}
+.cell.strike{box-shadow:inset 0 0 0 2px #FF4D4D;background:#2B0F0F;}
+.cell.strike::before{content:"◎";position:absolute;color:#FF6B6B;font-size:13px;font-weight:700;}
+.cell.smoke{background:#4A3A66;opacity:.92;}
+.cell.can-orb{box-shadow:inset 0 0 0 2px #FF4D4D;cursor:pointer;}
+.cell.can-orb:hover{background:#2B0F0F;}
+.orbtag{font-family:"IBM Plex Mono",monospace;font-size:11.5px;letter-spacing:.06em;
+  color:var(--warn);border:1px solid #4A3E14;padding:4px 8px;}
+
+
+</style>
+<script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
+</head>
+<body>
+
+<div id="modeSelect">
+  <header class="hero">
+    <p class="eyebrow">Тактический симулятор · правила v1.3</p>
+    <h1>Кибер<i>—</i>Арена</h1>
+    <p>Выберите режим.</p>
+  </header>
+  <div class="modePick">
+    <button class="modeCard" id="pickGod">
+      <h2>Режим бога</h2>
+      <p>Полная настройка боя: карта, размер, отряд, оружие, орбитальная поддержка и титаны — всё в ваших руках.</p>
+    </button>
+    <button class="modeCard" id="pickCamp">
+      <h2>Режим прохождения</h2>
+      <p>Один робот и три случайных пушки на старте. Выполняйте задания против ИИ, добывайте новых роботов и оружие.</p>
+    </button>
+    <button class="modeCard" id="pickNet" style="grid-column:1/-1">
+      <h2>⚡ Мультиплеер</h2>
+      <p>Создайте арену и пригласите соперника по ссылке. Каждый играет со своего устройства в реальном времени.</p>
+    </button>
+  </div>
+</div>
+
+
+<!-- ═══ ХОСТ: НАСТРОЙКА ═══ -->
+<div id="netHost">
+  <header class="hero">
+    <p class="eyebrow">Мультиплеер · хост</p><h1>Настройка арены</h1>
+  </header>
+
+  <div class="net-section"><h3>01 · Ваш ник</h3>
+    <input class="nick-input" id="hostNick" maxlength="16" placeholder="Введите ник..."></div>
+
+  <div class="net-section"><h3>02 · Карта</h3>
+    <div class="wopts" id="hostMapPick"></div></div>
+
+  <div class="net-section"><h3>03 · Запретить роботов</h3>
+    <p style="font-size:12px;color:var(--dim);margin:0 0 10px">Зачёркнутые — недоступны всем игрокам.</p>
+    <div class="ban-grid" id="hostBanRobots"></div></div>
+
+  <div class="net-section"><h3>04 · Запретить обычное оружие</h3>
+    <div class="ban-grid" id="hostBanWeapons"></div></div>
+
+  <div class="net-section"><h3>05 · Запретить ULTIMATE-оружие</h3>
+    <p style="font-size:12px;color:#D4AF37;margin:0 0 10px">★ Урон ×1.5, перезарядка −1.</p>
+    <div class="ban-grid" id="hostBanUltWeapons"></div></div>
+
+  <div class="net-section"><h3>06 · Запретить ULTIMATE-роботов</h3>
+    <p style="font-size:12px;color:#D4AF37;margin:0 0 10px">★ HP ×1.5, особый перк.</p>
+    <div class="ban-grid" id="hostBanUlts"></div></div>
+
+  <button class="start" id="hostCreate">Создать лобби →</button>
+  <p id="hostStatus" class="net-status"></p>
+  <button class="btn" id="hostBack" style="margin-top:12px">← Назад</button>
+</div>
+
+<!-- ═══ ХОСТ: ЛОББИ (после создания) ═══ -->
+<div id="netLobby" style="display:none">
+  <header class="hero">
+    <p class="eyebrow">Мультиплеер · лобби</p><h1>Ждём игроков</h1>
+  </header>
+  <div class="net-section"><h3>Ссылка-приглашение</h3>
+    <div class="link-box" id="hostLink"></div>
+    <button class="btn" id="hostCopyLink" style="margin-top:8px">Скопировать ссылку</button></div>
+
+  <div class="net-section"><h3>Настройки боя</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div><b style="font-size:12px;color:var(--dim);display:block;margin-bottom:6px">ОРБИТАЛКА</b>
+        <div class="ban-grid" id="lobbyOrbPick"></div></div>
+      <div><b style="font-size:12px;color:var(--dim);display:block;margin-bottom:6px">ТИТАНЫ</b>
+        <div class="ban-grid" id="lobbyTitanToggle"></div>
+        <div class="ban-grid" id="lobbyTitanPick" style="margin-top:8px;display:none"></div></div>
+    </div></div>
+
+  <div class="net-section"><h3>Ваш робот</h3>
+    <div class="picker" id="hostRobotPick"></div></div>
+  <div class="net-section" id="hostWepSection"><h3>Ваше оружие</h3>
+    <div class="wopts" id="hostWepPick"></div></div>
+
+  <div class="lobby-columns">
+    <div class="lobby-col col-a">
+      <div class="lobby-col-head">Команда A</div>
+      <div class="lobby-list" id="lobbyListA"></div>
+    </div>
+    <div class="lobby-col col-b">
+      <div class="lobby-col-head">Команда B</div>
+      <div class="lobby-list" id="lobbyListB"></div>
+    </div>
+  </div>
+  <button class="start" id="hostStart" disabled style="margin-top:16px">Начать бой</button>
+  <button class="btn" id="lobbyBack" style="margin-top:10px">← Назад</button>
+</div>
+
+<!-- ═══ ГОСТЬ-ЛОББИ ═══ -->
+<div id="netGuest">
+  <header class="hero">
+    <p class="eyebrow">Мультиплеер · гость</p><h1>Присоединиться</h1>
+  </header>
+  <p id="guestStatus" class="net-status" style="margin-bottom:12px"></p>
+
+  <div class="net-section"><h3>01 · Ваш ник</h3>
+    <input class="nick-input" id="guestNick" maxlength="16" placeholder="Введите ник..."></div>
+
+  <div class="net-section"><h3>02 · Команда</h3>
+    <div class="team-btn">
+      <button id="guestTeamA">Сторона A (синие)</button>
+      <button id="guestTeamB">Сторона B (оранжевые)</button>
+    </div></div>
+
+  <div class="net-section" id="guestRobotSection" style="display:none"><h3>03 · Робот</h3>
+    <div class="picker" id="guestRobotPick"></div></div>
+
+  <div class="net-section" id="guestWepSection" style="display:none"><h3>04 · Оружие</h3>
+    <div class="wopts" id="guestWepPick"></div></div>
+
+  <button class="start" id="guestReady" disabled>Готов!</button>
+  <button class="btn" id="guestBack" style="margin-top:12px">← Назад</button>
+</div>
+
+<div id="campaign">
+  <header class="hero">
+    <p class="eyebrow">Режим прохождения</p>
+    <h1>Ангар</h1>
+    <p id="campWinsLine">Миссия 1</p>
+  </header>
+  <div id="campReward" class="reward" style="display:none"></div>
+  <section class="step">
+    <div class="step-h"><span class="step-n">01</span><h2>Выберите робота</h2>
+      <span class="step-note">только открытые машины</span></div>
+    <div class="picker" id="campRobots"></div>
+  </section>
+  <section class="step" id="campWStep">
+    <div class="step-h"><span class="step-n">02</span><h2>Вооружение</h2>
+      <span class="step-note">открытое для этого робота</span></div>
+    <div class="wopts" id="campWeapons"></div>
+    <div id="campUlt" style="display:none"></div>
+  </section>
+  <button class="start" id="campGo" disabled>В бой</button>
+  <button class="btn" id="campBack" style="margin-top:10px">← Выбор режима</button>
+</div>
+
+<div id="menu">
+  <button class="btn" id="menuBack" style="margin-bottom:14px">← Выбор режима</button>
+  <header class="hero">
+    <p class="eyebrow">Тактический симулятор · правила v1.3</p>
+    <h1>Кибер<i>—</i>Арена</h1>
+    <p>Пошаговый бой роботов на координатной сетке. Соберите отряд и выберите поле.</p>
+  </header>
+
+  <section class="step">
+    <div class="step-h"><span class="step-n">01</span><h2>Противник</h2></div>
+    <div class="opts" id="optMode"></div>
+  </section>
+
+  <section class="step">
+    <div class="step-h"><span class="step-n">02</span><h2>Карта</h2></div>
+    <div class="opts" id="optMap"></div>
+  </section>
+
+  <section class="step">
+    <div class="step-h"><span class="step-n">03</span><h2>Размер боя</h2></div>
+    <div class="opts" id="optSize"></div>
+  </section>
+
+  <section class="step">
+    <div class="step-h"><span class="step-n">04</span><h2>Ваш отряд</h2>
+      <span class="step-note" id="pickNote">—</span></div>
+    <div class="picker" id="picker"></div>
+    <div class="subhead">Ультимативное снаряжение</div>
+    <div class="picker" id="pickerU"></div>
+  </section>
+
+  <section class="step" id="stepW" style="display:none">
+    <div class="step-h"><span class="step-n">05</span><h2>Вооружение</h2>
+      <span class="step-note">★ — родное оружие робота</span></div>
+    <div id="wsel"></div>
+  </section>
+
+  <section class="step">
+    <div class="step-h"><span class="step-n">06</span><h2>Орбитальная поддержка</h2>
+      <span class="step-note">каждому роботу достаётся своя — заряжается обломками</span></div>
+    <div class="opts" id="optOrb"></div>
+  </section>
+
+  <section class="step" id="stepT">
+    <div class="step-h"><span class="step-n">07</span><h2>Титан</h2>
+      <span class="step-note">случайный титан приходит на замену роботу с киллом</span></div>
+    <div class="opts" id="optTitan"></div>
+  </section>
+
+  <section class="step">
+    <div class="step-h"><span class="step-n">08</span><h2>Погода</h2>
+      <span class="step-note">шторм режет дальность стрельбы и обзор</span></div>
+    <div class="opts" id="optWeather"></div>
+  </section>
+
+  <button class="start" id="go" disabled>Начать бой</button>
+</div>
+
+<div id="game">
+  <div class="bar">
+    <span class="turnpill pa" id="pill">СТОРОНА A</span>
+    <span class="meta">ХОД <b id="tn">1</b></span>
+    <span class="meta" id="mtag"></span>
+    <span class="orbtag" id="orbtag" style="display:none"></span>
+    <span class="sp">
+      <button class="btn go" id="end">Завершить ход</button>
+      <button class="btn" id="skip" style="display:none">Пропустить мой ход</button>
+      <button class="btn" id="quit">Выйти</button>
+    </span>
+  </div>
+
+  <div class="hintbar" id="hint">
+    <b id="hintT"></b><span id="hintS"></span>
+    <button class="btn x" id="cancel">Отмена</button>
+  </div>
+  <div id="capBar">
+    <span id="capLblA">A: 0</span>
+    <div id="capTrack"><div id="capFillA" style="width:0%"></div><div id="capFillB" style="width:0%"></div></div>
+    <span id="capLblB">0 :B</span>
+    <span style="color:var(--dim);font-size:11px;" id="capGoal"></span>
+  </div>
+
+  <div class="wrap">
+    <div class="mapbox" style="position:relative;"><div id="board"></div>
+      <div id="rainFX" style="display:none;"></div>
+      <div class="legend" id="legend"></div></div>
+    <div>
+      <div class="card" id="actionCard">
+        <h3>Робот</h3>
+        <div id="info"><p style="color:var(--faint);font-size:13px;margin:0;">Нажмите на своего робота — синюю фишку на поле.</p></div>
+      </div>
+      <div class="card"><h3>Отряды</h3><div class="rl" id="rl"></div></div>
+      <div class="card"><h3>Журнал</h3><div id="log"></div></div>
+    </div>
+  </div>
+</div>
+
+<div class="over" id="over"><div class="bx">
+  <h2 id="oT">Победа</h2><p id="oS"></p>
+  <button class="btn go" id="again">В меню</button>
+</div></div>
+
+<div class="over" id="brief"><div class="bx letter">
+  <p class="eyebrow" id="briefCmd">Командир</p>
+  <h2>Боевое донесение</h2>
+  <p id="briefText"></p>
+  <p id="briefSquad" style="color:var(--faint);font-size:12.5px;"></p>
+  <button class="btn go" id="briefGo">В бой</button>
+</div></div>
+
+<div id="tutbox">
+  <div class="tutinner">
+    <span class="tutstep" id="tutStep">1/4</span>
+    <p id="tutText"></p>
+    <button class="btn" id="tutNext">Понятно →</button>
+  </div>
+</div>
+
+<script>
+"use strict";
+const LET="ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+const cn=(a,b)=>Math.max(Math.abs(a.x-b.x),Math.abs(a.y-b.y));
+const kk=(x,y)=>x+","+y;
+const nmc=p=>LET[p.x]+(p.y+1);
+const $=id=>document.getElementById(id);
+
+const R={
+ tirkin :{n:"Тиркин",c:"Штурмовик",hp:14,sp:3,sh:2,w:{n:"Тяжёлые турели",d:4,r:7,rl:2},
+   ab:{n:"Рывок",cd:6,t:"self",d:"2 хода по 5 клеток, затем взрыв 8"}},
+ raiken :{n:"Райкен",c:"Поддержка",hp:12,sp:4,sh:2,w:{n:"Тяжёлые орудия",d:5,r:5,rl:2},
+   ab:{n:"Купол",cd:5,t:"self",d:"Радиус 2: союзникам +3, огонь гасится"}},
+ crisis  :{n:"Кристаликс",c:"Снайпер",hp:10,sp:3,sh:0,w:{n:"Tender",d:4,r:10,rl:3,aoe:1},
+   ab:{n:"Невидимость",cd:3,t:"self",d:"Пропадает с радаров до своего выстрела"}},
+ athier :{n:"Атьер",c:"Лёгкий",hp:11,sp:4,sh:2,w:{n:"Радиационные пулемёты",d:3,r:6,rl:1,dot:2},
+   ab:{n:"Полёт",cd:4,t:"self",d:"Укрытия не мешают, +1 урон"}},
+ baglior:{n:"Баглиор",c:"Снайпер",hp:9,sp:3,sh:0,w:{n:"Ракеты",d:6,r:9,rl:3,bend:1},
+   ab:{n:"Метка",cd:4,t:"cell",rad:5,d:"Ставит метку, потом прыжок к ней"}},
+ obelisk:{n:"Обелиск",c:"Танк",hp:16,sp:2,sh:2,w:{n:"Тяжёлые орудия",d:5,r:5,rl:2},
+   ab:{n:"Якорь",cd:4,t:"self",d:"Замирает, щит усиливается до 4"}},
+ verdict:{n:"Вердикт",c:"Контролёр",hp:12,sp:3,sh:2,w:{n:"Газовая пушка",d:3,r:5,rl:1,slow:1},
+   ab:{n:"Минное поле",cd:5,t:"cell",rad:3,mines:1,d:"3 мины в радиусе 3, по 3 урона"}},
+ feng   :{n:"Hawk",c:"Штурмовик",hp:13,sp:4,sh:2,w:{n:"Энергетические пулемёты",d:3,r:6,rl:1},
+   ab:{n:"Взлёт",cd:5,t:"cell",rad:8,enemyOnly:1,d:"3 хода в воздухе: луч бьёт цель на 3 за ход, пушки отключены, стены рвут луч"}},
+ grom   :{n:"Гром",c:"Артиллерия",hp:10,sp:2,sh:0,w:{n:"Мортира",d:5,r:9,min:5,rl:3,aoe:1,arc:1},
+   ab:{n:"Залп",cd:5,t:"self",d:"Следующий выстрел накрывает 5×5"}},
+ kerli  :{n:"Керли",c:"Хрупкий страж",hp:8,sp:3,sh:0,w:{n:"Ледяные ракетницы",d:3,r:5,rl:1,freeze:1},
+   ab:{n:"Бастион",cd:5,t:"cell",rad:2,d:"Щиты 4 на 2 хода + 2 турели у выбранной клетки, сами бьют врагов на 1 (радиус 2)"}}
+};
+const IDS=Object.keys(R);
+const ULTPERK={tirkin:"рывок без отката",raiken:"купол лечит вдвое",crisis:"невидимость не спадает от выстрела",
+ athier:"в полёте +2 урона",baglior:"метка ставится мгновенно",obelisk:"якорь не мешает ходить",
+ verdict:"мины бьют на 5",feng:"луч держится 5 ходов",grom:"залп без отката",kerli:"щиты 6 вместо 4"};
+// --- MECH PARTS --------------------------------------------------
+// Each robot has LEGS (bottom layer) and TURRET (top layer).
+// Both rotate to face their direction via SVG transform.
+// Base orientation of every drawing: pointing DOWN (dy:+1, angle 0).
+
+const LEGS={
+ // Two-legged frames
+ biped:'<g><rect x="8.5" y="9" width="7" height="2.6" rx="0.6" fill="currentColor" stroke="#000" stroke-width="0.5"/><path d="M9 11 L7.5 15 L7 20 L10.2 20 L10 15 L10.4 11 Z" fill="currentColor" stroke="#000" stroke-width="0.5" stroke-linejoin="round"/><path d="M15 11 L16.5 15 L17 20 L13.8 20 L14 15 L13.6 11 Z" fill="currentColor" stroke="#000" stroke-width="0.5" stroke-linejoin="round"/><rect x="6.6" y="19.2" width="4" height="1.6" rx="0.3" fill="#000" opacity="0.3"/><rect x="13.4" y="19.2" width="4" height="1.6" rx="0.3" fill="#000" opacity="0.3"/><circle cx="9" cy="11" r="1" fill="#000" opacity="0.35"/><circle cx="15" cy="11" r="1" fill="#000" opacity="0.35"/></g>',
+ // Heavy tripod for tanks
+ tripod:'<g><path d="M8 9 L4.5 14 L4 20 L8 20 L9.5 14 Z" fill="currentColor" stroke="#000" stroke-width="0.5" stroke-linejoin="round"/><path d="M16 9 L19.5 14 L20 20 L16 20 L14.5 14 Z" fill="currentColor" stroke="#000" stroke-width="0.5" stroke-linejoin="round"/><path d="M10.5 12 L11 21 L13 21 L13.5 12 Z" fill="currentColor" stroke="#000" stroke-width="0.5" stroke-linejoin="round"/><rect x="9" y="8.5" width="6" height="3" rx="0.6" fill="currentColor" stroke="#000" stroke-width="0.5"/><rect x="3.6" y="19.2" width="5" height="1.8" rx="0.3" fill="#000" opacity="0.3"/><rect x="15.4" y="19.2" width="5" height="1.8" rx="0.3" fill="#000" opacity="0.3"/></g>',
+ // Quad legs for artillery
+ quad:'<g><rect x="9" y="9" width="6" height="6" rx="1" fill="currentColor" stroke="#000" stroke-width="0.5"/><path d="M9.5 10 L4 12 L3 15 L6 15 L9.5 12.5 Z" fill="currentColor" stroke="#000" stroke-width="0.5" stroke-linejoin="round"/><path d="M14.5 10 L20 12 L21 15 L18 15 L14.5 12.5 Z" fill="currentColor" stroke="#000" stroke-width="0.5" stroke-linejoin="round"/><path d="M9.5 14 L5 18 L5 21 L8 20 L10 15.5 Z" fill="currentColor" stroke="#000" stroke-width="0.5" stroke-linejoin="round"/><path d="M14.5 14 L19 18 L19 21 L16 20 L14 15.5 Z" fill="currentColor" stroke="#000" stroke-width="0.5" stroke-linejoin="round"/></g>',
+ // Sleek runner
+ runner:'<g><rect x="9" y="9.5" width="6" height="2.2" rx="0.6" fill="currentColor" stroke="#000" stroke-width="0.5"/><path d="M9.5 11 L7 14 L6 19 L8 19.5 L9.5 15 L10.5 11.5 Z" fill="currentColor" stroke="#000" stroke-width="0.5" stroke-linejoin="round"/><path d="M14.5 11 L17 14 L18 19 L16 19.5 L14.5 15 L13.5 11.5 Z" fill="currentColor" stroke="#000" stroke-width="0.5" stroke-linejoin="round"/><path d="M5.6 18.5 L6 20.5 L9 20 L8.4 18.6 Z" fill="currentColor" stroke="#000" stroke-width="0.4" stroke-linejoin="round"/><path d="M18.4 18.5 L18 20.5 L15 20 L15.6 18.6 Z" fill="currentColor" stroke="#000" stroke-width="0.4" stroke-linejoin="round"/></g>',
+ // Hover pad (Hawk on ground)
+ // Hawk strider — hip axle + two detailed boots, mid-stride, points UP
+ strider:'<g><rect x="5.5" y="9" width="13" height="2.6" rx="0.8" fill="currentColor" stroke="#000" stroke-width="0.5"/><path d="M7.6 11.2 L6.4 15 L6 19.5 L9.4 19.5 L9.2 15 L9.4 11.2 Z" fill="currentColor" stroke="#000" stroke-width="0.5" stroke-linejoin="round"/><path d="M16.4 11.2 L17.6 15.5 L18 21 L14.6 21 L14.8 15.5 L14.6 11.2 Z" fill="currentColor" stroke="#000" stroke-width="0.5" stroke-linejoin="round"/><rect x="8.9" y="11.8" width="1.1" height="4" fill="#000" opacity="0.35"/><rect x="14" y="11.8" width="1.1" height="4" fill="#000" opacity="0.35"/><rect x="5.9" y="18.5" width="3.6" height="1.4" fill="#000" opacity="0.3"/><rect x="14.6" y="20" width="3.6" height="1.4" fill="#000" opacity="0.3"/></g>'
+};
+
+const LEGMAP={
+ tirkin:'runner',raiken:'biped',crisis:'quad',athier:'runner',baglior:'quad',
+ obelisk:'tripod',verdict:'biped',feng:'strider',grom:'quad',kerli:'biped',
+ atlas:'tripod',mull:'runner',fort:'tripod'
+};
+
+// TURRETS — top of the mech. Barrel/silhouette hints at role. Origin at (12,12).
+const TURRET={
+ tirkin :'<g><rect x="6" y="6" width="12" height="10" rx="1.5" fill="currentColor" stroke="#000" stroke-width="0.6"/><rect x="7.5" y="0" width="2.6" height="7" rx="0.3" fill="currentColor" stroke="#000" stroke-width="0.5"/><rect x="13.9" y="0" width="2.6" height="7" rx="0.3" fill="currentColor" stroke="#000" stroke-width="0.5"/><rect x="8" y="8" width="8" height="2" fill="#000" opacity="0.55"/><circle cx="12" cy="13" r="1.3" fill="#000"/></g>',
+ raiken :'<g><path d="M12 4 A6.5 6.5 0 0 0 5.5 10.5 V15 H18.5 V10.5 A6.5 6.5 0 0 0 12 4 Z" fill="currentColor" stroke="#000" stroke-width="0.6" stroke-linejoin="round"/><rect x="10.5" y="0" width="3" height="5.5" rx="0.4" fill="currentColor" stroke="#000" stroke-width="0.5"/><circle cx="12" cy="3.2" r="1.1" fill="#000" opacity="0.5"/><circle cx="12" cy="10.5" r="2" fill="#000"/><circle cx="12" cy="10.5" r="0.9" fill="currentColor"/><path d="M6 15 H18 L17 17.5 H7 Z" fill="currentColor" stroke="#000" stroke-width="0.5" stroke-linejoin="round"/></g>',
+ crisis  :'<g><rect x="10.8" y="0" width="2.4" height="12" rx="0.3" fill="currentColor" stroke="#000" stroke-width="0.5"/><path d="M12 6 L16 12 L15 17 H9 L8 12 Z" fill="currentColor" stroke="#000" stroke-width="0.6" stroke-linejoin="round"/><rect x="9" y="9" width="6" height="2" fill="#000" opacity="0.5"/><rect x="10.4" y="2" width="3.2" height="1.4" fill="#000" opacity="0.45"/><circle cx="12" cy="13.5" r="1.2" fill="#000"/></g>',
+ athier :'<g><path d="M12 5 L16 9 L15 15 H9 L8 9 Z" fill="currentColor" stroke="#000" stroke-width="0.6" stroke-linejoin="round"/><rect x="9" y="1" width="1.6" height="6" transform="rotate(-12 9.8 4)" fill="currentColor" stroke="#000" stroke-width="0.4"/><rect x="13.4" y="1" width="1.6" height="6" transform="rotate(12 14.2 4)" fill="currentColor" stroke="#000" stroke-width="0.4"/><circle cx="12" cy="10" r="1.4" fill="#000"/><circle cx="12" cy="10" r="0.6" fill="currentColor"/><path d="M9 15 L8 18 M15 15 L16 18" stroke="#000" stroke-width="0.5" opacity="0.5" fill="none"/></g>',
+ baglior:'<g><rect x="6" y="5" width="12" height="9" rx="1" fill="currentColor" stroke="#000" stroke-width="0.6"/><circle cx="8.5" cy="4" r="1.4" fill="#000"/><circle cx="12" cy="3.4" r="1.4" fill="#000"/><circle cx="15.5" cy="4" r="1.4" fill="#000"/><rect x="8" y="8" width="8" height="4" rx="0.5" fill="#000" opacity="0.45"/><rect x="10.6" y="12" width="2.8" height="4" fill="currentColor" stroke="#000" stroke-width="0.5"/></g>',
+ obelisk:'<g><path d="M4 7 H20 L18 16 H6 Z" fill="currentColor" stroke="#000" stroke-width="0.7" stroke-linejoin="round"/><rect x="9.5" y="0" width="5" height="8" rx="0.6" fill="currentColor" stroke="#000" stroke-width="0.6"/><rect x="10.5" y="0" width="3" height="8" fill="#000" opacity="0.4"/><rect x="5" y="9" width="14" height="2.4" fill="#000" opacity="0.35"/><rect x="6" y="12.5" width="12" height="2.2" fill="#000" opacity="0.3"/></g>',
+ verdict:'<g><path d="M9 6 H15 L14 15 H10 Z" fill="currentColor" stroke="#000" stroke-width="0.6" stroke-linejoin="round"/><path d="M8.5 0 L15.5 0 L14 5 L10 5 Z" fill="currentColor" stroke="#000" stroke-width="0.5" stroke-linejoin="round"/><rect x="4.5" y="8" width="3" height="6" rx="1" fill="currentColor" stroke="#000" stroke-width="0.5"/><rect x="16.5" y="8" width="3" height="6" rx="1" fill="currentColor" stroke="#000" stroke-width="0.5"/><circle cx="12" cy="10" r="1.3" fill="#000"/></g>',
+ feng   :'<g><path d="M12 8 L2.5 12.5 L4.5 15.5 L12 13 Z" fill="currentColor" stroke="#000" stroke-width="0.5" stroke-linejoin="round"/><path d="M12 8 L21.5 12.5 L19.5 15.5 L12 13 Z" fill="currentColor" stroke="#000" stroke-width="0.5" stroke-linejoin="round"/><path d="M12 1 L15 5.5 L15 17 L12 19.5 L9 17 L9 5.5 Z" fill="currentColor" stroke="#000" stroke-width="0.6" stroke-linejoin="round"/><rect x="9.5" y="0" width="1.4" height="5.5" fill="currentColor" stroke="#000" stroke-width="0.4"/><rect x="13.1" y="0" width="1.4" height="5.5" fill="currentColor" stroke="#000" stroke-width="0.4"/><circle cx="12" cy="9.5" r="1.7" fill="#000"/><circle cx="12" cy="9.5" r="0.7" fill="currentColor"/><rect x="10" y="16.5" width="4" height="2.4" rx="0.4" fill="#000" opacity="0.5"/></g>',
+ grom   :'<g><rect x="6" y="9" width="12" height="7" rx="1" fill="currentColor" stroke="#000" stroke-width="0.6"/><path d="M8.5 9 L9.5 1 L14.5 1 L15.5 9 Z" fill="currentColor" stroke="#000" stroke-width="0.6" stroke-linejoin="round"/><ellipse cx="12" cy="1.5" rx="3" ry="1" fill="#000" opacity="0.5"/><circle cx="8.5" cy="13" r="1.4" fill="#000" opacity="0.4"/><circle cx="15.5" cy="13" r="1.4" fill="#000" opacity="0.4"/><circle cx="12" cy="13" r="1.3" fill="#000"/></g>',
+ kerli  :'<g><path d="M12 3 L17 8 L15.5 15 H8.5 L7 8 Z" fill="currentColor" stroke="#000" stroke-width="0.6" stroke-linejoin="round"/><path d="M12 3 L12 15" stroke="#000" stroke-width="0.4" opacity="0.4"/><path d="M9 1 L10.5 5 M15 1 L13.5 5" stroke="#000" stroke-width="0.6" opacity="0.5" fill="none"/><rect x="5.5" y="7" width="2.4" height="5" rx="0.4" fill="currentColor" stroke="#000" stroke-width="0.4"/><rect x="16.1" y="7" width="2.4" height="5" rx="0.4" fill="currentColor" stroke="#000" stroke-width="0.4"/><circle cx="12" cy="10" r="1.3" fill="#000"/></g>',
+ // titans
+ atlas:'<g><path d="M4 8 L7 6 H17 L20 8 L18 16 H6 Z" fill="currentColor" stroke="#000" stroke-width="0.7" stroke-linejoin="round"/><rect x="9.5" y="0" width="5" height="9" rx="0.6" fill="currentColor" stroke="#000" stroke-width="0.6"/><rect x="10.6" y="0.5" width="2.8" height="8" fill="#000" opacity="0.4"/><rect x="4.5" y="9" width="2.6" height="4" rx="0.4" fill="currentColor" stroke="#000" stroke-width="0.5"/><rect x="16.9" y="9" width="2.6" height="4" rx="0.4" fill="currentColor" stroke="#000" stroke-width="0.5"/><circle cx="12" cy="12.5" r="1.7" fill="#000"/><circle cx="12" cy="12.5" r="0.8" fill="currentColor"/></g>',
+ mull:'<g><path d="M12 0 L15 6 L14 16 L12 19 L10 16 L9 6 Z" fill="currentColor" stroke="#000" stroke-width="0.7" stroke-linejoin="round"/><path d="M12 0 L12 8" stroke="#000" stroke-width="0.5" opacity="0.5"/><path d="M9.2 5 L5 9 L7 11 L10 8 Z" fill="currentColor" stroke="#000" stroke-width="0.5" stroke-linejoin="round"/><path d="M14.8 5 L19 9 L17 11 L14 8 Z" fill="currentColor" stroke="#000" stroke-width="0.5" stroke-linejoin="round"/><circle cx="12" cy="11" r="1.5" fill="#000"/><circle cx="12" cy="11" r="0.7" fill="currentColor"/></g>',
+ fort:'<g><rect x="3" y="6" width="18" height="11" rx="1.5" fill="currentColor" stroke="#000" stroke-width="0.8"/><rect x="8.5" y="0" width="7" height="8" rx="0.6" fill="currentColor" stroke="#000" stroke-width="0.7"/><rect x="10" y="0.5" width="4" height="7" fill="#000" opacity="0.4"/><rect x="2.5" y="5" width="4" height="4" rx="0.5" fill="currentColor" stroke="#000" stroke-width="0.6"/><rect x="17.5" y="5" width="4" height="4" rx="0.5" fill="currentColor" stroke="#000" stroke-width="0.6"/><rect x="4" y="9.5" width="16" height="2.4" fill="#000" opacity="0.35"/><rect x="5" y="13" width="14" height="2.2" fill="#000" opacity="0.3"/><circle cx="12" cy="12.5" r="1.6" fill="#000"/></g>'
+};
+
+// menu icons (small silhouettes for pickers/roster — reuse turret silhouette without rotation)
+const ICON={
+ tirkin :'<g transform="translate(0,2)">'+LEGS.runner+'</g><g transform="translate(0,-2)">'+TURRET.tirkin+'</g>',
+ raiken :'<g transform="translate(0,2)">'+LEGS.biped+'</g><g transform="translate(0,-2)">'+TURRET.raiken+'</g>',
+ crisis  :'<g transform="translate(0,2)">'+LEGS.quad+'</g><g transform="translate(0,-2)">'+TURRET.crisis+'</g>',
+ athier :'<g transform="translate(0,2)">'+LEGS.runner+'</g><g transform="translate(0,-2)">'+TURRET.athier+'</g>',
+ baglior:'<g transform="translate(0,2)">'+LEGS.quad+'</g><g transform="translate(0,-2)">'+TURRET.baglior+'</g>',
+ obelisk:'<g transform="translate(0,2)">'+LEGS.tripod+'</g><g transform="translate(0,-2)">'+TURRET.obelisk+'</g>',
+ verdict:'<g transform="translate(0,2)">'+LEGS.biped+'</g><g transform="translate(0,-2)">'+TURRET.verdict+'</g>',
+ feng   :'<g transform="translate(0,2)">'+LEGS.strider+'</g><g transform="translate(0,-2)">'+TURRET.feng+'</g>',
+ grom   :'<g transform="translate(0,2)">'+LEGS.quad+'</g><g transform="translate(0,-2)">'+TURRET.grom+'</g>',
+ kerli  :'<g transform="translate(0,2)">'+LEGS.biped+'</g><g transform="translate(0,-2)">'+TURRET.kerli+'</g>',
+ atlas:'<g transform="translate(0,2)">'+LEGS.tripod+'</g><g transform="translate(0,-2)">'+TURRET.atlas+'</g>',
+ mull:'<g transform="translate(0,2)">'+LEGS.runner+'</g><g transform="translate(0,-2)">'+TURRET.mull+'</g>',
+ fort:'<g transform="translate(0,2)">'+LEGS.tripod+'</g><g transform="translate(0,-2)">'+TURRET.fort+'</g>'
+};
+
+// Ultimate emblem — gold halo + cardinal studs, drawn on top, does not rotate.
+const ULTEMBLEM='<g pointer-events="none"><circle cx="12" cy="12" r="10.6" fill="none" stroke="#5A3E00" stroke-width="1.4"/><circle cx="12" cy="12" r="10.6" fill="none" stroke="#FFE9A8" stroke-width="0.7"/><g fill="#FFE9A8" stroke="#5A3E00" stroke-width="0.5" stroke-linejoin="round"><path d="M12 0.4 L13.4 3.2 L10.6 3.2 Z"/><path d="M12 23.6 L13.4 20.8 L10.6 20.8 Z"/><path d="M0.4 12 L3.2 10.6 L3.2 13.4 Z"/><path d="M23.6 12 L20.8 10.6 L20.8 13.4 Z"/></g></g>';
+
+function angleOf(dir){
+  if(!dir)return 0;
+  const dx=dir.dx||0,dy=dir.dy||0;
+  if(dx===0&&dy===0)return 0;
+  // default drawing points DOWN (0,+1) which we treat as angle 0
+  // rotation angle in degrees
+  return Math.round(Math.atan2(dy,dx)*180/Math.PI)-90;
+}
+
+// Full mech drawing at given pct size — legs rotated to moveDir, turret rotated to lastDir.
+function mechSvg(u,pct){
+  const id=u.titan?u.tid:u.id;
+  const legsKey=LEGMAP[id]||'biped';
+  const legAng=angleOf(u.moveDir||u.lastDir||{dx:0,dy:1});
+  const turAng=angleOf(u.lastDir||u.moveDir||{dx:0,dy:1});
+  const flying=(u.beam>0||u.fly);
+  const legs=flying
+    ? '<g opacity="0.5"><ellipse cx="12" cy="20" rx="6" ry="1.6" fill="#000"/></g>'
+    : '<g transform="rotate('+legAng+' 12 12)">'+(LEGS[legsKey]||LEGS.biped)+'</g>';
+  const scale=flying?1.1:1;
+  const yShift=flying?-2:0;
+  const turret='<g transform="translate(0 '+yShift+') scale('+scale+') translate('+(12*(1-scale))+' '+(12*(1-scale))+') rotate('+turAng+' 12 12)">'+(TURRET[id]||'')+'</g>';
+  const ult=(u.ultR||u.ultW)?ULTEMBLEM:'';
+  return '<svg viewBox="0 0 24 24" width="'+pct+'%" height="'+pct+'%" fill="currentColor" aria-hidden="true">'+legs+turret+ult+'</svg>';
+}
+
+function ico(id,px){
+  return '<svg viewBox="0 0 24 24" width="'+px+'" height="'+px+'" fill="currentColor" aria-hidden="true">'+
+    (ICON[id]||TICON[id]||'')+'</svg>';
+}
+function ico2(id,pct){
+  return '<svg viewBox="0 0 24 24" width="'+pct+'%" height="'+pct+'%" fill="currentColor" aria-hidden="true">'+
+    (ICON[id]||TICON[id]||'')+'</svg>';
+}
+function uico(u,px){return ico(u.titan?u.tid:u.id,px);}
+function uicoPct(u,pct){return ico2(u.titan?u.tid:u.id,pct);}
+
+const WPN={
+ rocket :{n:"Ракетная установка",d:6,r:9,rl:3,bend:1,c:"long",note:"огибает укрытия — бьёт даже из-за стены"},
+ tender :{n:"Tender",d:4,r:10,rl:3,aoe:1,c:"long",sig:"дальность 10 — максимум в игре",note:"самая дальняя (10), урон по зоне 3×3"},
+ lgun   :{n:"Дальнобойная пушка",d:5,r:8,rl:2,c:"long",sig:"быстрая для дальнобоя (перез. 2)",note:"единственная дальняя с перезарядкой 2 — стабильный огонь"},
+ mortar :{n:"Мортира",d:5,r:9,min:5,rl:3,aoe:1,arc:1,c:"long",note:"навесом: бьёт через стены по зоне, но не ближе 5"},
+ turret :{n:"Тяжёлые турели",d:4,r:7,rl:2,c:"mid",hv:1,sig:"макс. дальность среди средних",note:"самая дальняя из средних (7)"},
+ cannon :{n:"Тяжёлые орудия",d:5,r:5,rl:2,c:"mid",hv:1,sig:"макс. урон среди средних",note:"самый высокий средний урон (5)"},
+ mg     :{n:"Пулемёты",d:3,r:5,rl:1,dot:1,c:"mid",note:"заражение: +1 урона ещё 2 хода после попадания"},
+ mgacid :{n:"Радиационные пулемёты",d:3,r:6,rl:1,dot:2,c:"mid",only:"athier",note:"родные Athier: заражение +2 урона 2 хода"},
+ gas    :{n:"Газовая пушка",d:3,r:6,rl:1,slow:1,c:"mid",note:"замедляет цель на ход"},
+ emg    :{n:"Энергетические пулемёты",d:3,r:7,rl:1,c:"mid",only:"feng",sig:"дальность 7 при перез. 1",note:"родные Hawk: дальность 7 при перезарядке 1"},
+ icerkt :{n:"Ледяные ракетницы",d:3,r:5,rl:1,freeze:1,c:"mid",only:"kerli",note:"родные Керли: 3 попадания подряд — заморозка на ход"},
+ shotgun:{n:"Тяжёлый дробовик",d:4,r:3,rl:2,pb:3,c:"close",hv:1,note:"+3 урона вплотную (итого 7 в упор)"},
+ plasma :{n:"Плазменный резак",d:5,r:3,rl:2,pi:1,c:"close",note:"полностью игнорирует щиты цели"}
+};
+const SLOT={tirkin:["mid","close"],raiken:["mid","close"],obelisk:["mid","close"],
+ verdict:["mid","close"],athier:["mid","close"],feng:["mid","close"],kerli:["mid","close"],
+ crisis:["long","close"],baglior:["long","close"],grom:["long","close"]};
+const NOHV={athier:1,feng:1};
+const NAT={tirkin:"turret",raiken:"cannon",crisis:"tender",athier:"mgacid",baglior:"rocket",
+ obelisk:"cannon",verdict:"gas",feng:"emg",grom:"mortar",kerli:"icerkt"};
+function armory(id){
+  return Object.keys(WPN).filter(function(k){
+    const w=WPN[k];
+    if(w.only&&w.only!==id)return false;
+    if(SLOT[id].indexOf(w.c)<0)return false;
+    if(w.hv&&NOHV[id])return false;
+    return true;});
+}
+function ULTW(w){
+  const o=Object.assign({},w);
+  o.d=Math.round(w.d*1.5);
+  o.rl=Math.max(1,w.rl-1);
+  o.ult=true;
+  return o;
+}
+const W=u=>(u.titan?DEF(u).w:(u.ultW?ULTW(WPN[u.wid]):WPN[u.wid]));
+function trait(w){
+  const t=[];
+  if(w.sig)t.push(w.sig);
+  if(w.bend)t.push("сквозь укрытия");
+  if(w.arc)t.push("навесом через стены");
+  if(w.aoe)t.push("зона 3×3");
+  if(w.pi)t.push("игнор щита");
+  if(w.pb)t.push("+"+w.pb+" в упор");
+  if(w.slow)t.push("замедление");
+  if(w.dot)t.push("заражение +"+w.dot);
+  if(w.freeze)t.push("заморозка");
+  if(w.min)t.push("мин. "+w.min);
+  return t.length?t.join(", "):"нет особых свойств";
+}
+const TITAN={
+ atlas:{n:"Atlas",c:"Мобильный титан",hp:34,sp:2,sh:2,bw:1,bh:2,
+   w:{n:"«Молот», орудие",d:7,r:7,rl:2},
+   ab:{n:"Прыжок",cd:4,t:"cell",rad:4,thru:1,d:"Прыжок на 4 клетки через любые препятствия"},
+   ab2:{n:"Металлический шторм",cd:5,t:"self",d:"5 урона всем врагам в радиусе 1"}},
+ mull:{n:"Mull",c:"Скоростной титан",hp:26,sp:4,sh:0,bw:1,bh:1,
+   w:{n:"«Скальпель», резак",d:6,r:4,rl:1},
+   ab:{n:"Рывок",cd:4,t:"cell",rad:4,thru:1,d:"Разгон до 4 клеток: 3 урона и отброс врагов рядом, летящие падают (−5)"},
+   ab2:{n:"Форсаж",cd:5,t:"self",d:"2 хода стрельба без перезарядки"}},
+ fort:{n:"Fort",c:"Тяжёлый титан",hp:48,sp:1,sh:2,bw:2,bh:2,
+   w:{n:"«Бастион», орудие",d:6,r:8,rl:2},
+   ab:{n:"Бастион",cd:4,t:"self",d:"Замирает на 2 хода, +4 урона к выстрелу"},
+   ab2:{n:"Регенерация",cd:6,t:"self",d:"4 хода: +2 прочности за ход, но входящий урон удваивается"}}
+};
+const TICON={
+ atlas:'<path d="M9.4 1.4h5.2v3.2h5.6v6.2l-3.4 2.6v8.2h-3.4v-5.4h-2.8v5.4H7.2v-8.2L3.8 10.8V4.6h5.6Z"/>',
+ fort:'<path fill-rule="evenodd" d="M12 1.4 21.4 5.6v7.2c0 5.4-9.4 9.8-9.4 9.8S2.6 18.2 2.6 12.8V5.6Zm0 5.4a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z"/>',
+ mull:'<path fill-rule="evenodd" d="M12 1.4 20.4 9 16.2 22.6H7.8L3.6 9Z M12 7.6 8.9 13 12 18.4 15.1 13Z"/>' 
+};
+function DEF(u){return u.titan?TITAN[u.tid]:R[u.id];}
+
+const ORB={
+ barrage:{n:"BARRAGE",     r:2,d:5, t:"dmg", note:"5 урона в области 5×5"},
+ emp    :{n:"EMP",         r:2,d:0, t:"emp", note:"5×5: сбрасывает способности врагов и гасит щиты на 2 хода"},
+ supply :{n:"SUPPLY",      r:1,d:0, t:"heal",note:"3×3: союзникам +5 прочности и мгновенная перезарядка"},
+ smoke  :{n:"SMOKE",       r:2,d:0, t:"smoke",note:"5×5: завеса на 3 хода, сквозь неё не видно"}
+};
+
+
+
+
+
+
+function bl(sp){const s=new Set();for(const a of sp){const c0=LET.indexOf(a[0]);
+  for(let x=0;x<a[2];x++)for(let y=0;y<a[3];y++)s.add(kk(c0+x,a[1]-1+y));}return s;}
+function cs(sp){return new Set(sp.map(a=>kk(LET.indexOf(a[0]),a[1]-1)));}
+function band(cols,y0,y1){const s=new Set();for(const c of cols)for(let r=y0;r<=y1;r++)s.add(kk(c,r));return s;}
+
+function rnd(seed){let x=seed;return function(){x=(x*1103515245+12345)&0x7fffffff;return x/0x7fffffff;};}
+function genMap(name,sub,w,h,wallPct,treePct,seed,note){
+  const R=rnd(seed),obs=new Set(),tree=new Set();
+  const keep=(x,y)=>{
+    if(x<6&&y>h-7)return false;
+    if(x>w-7&&y<6)return false;
+    return true;
+  };
+  for(let i=0;i<w*h*wallPct;i++){
+    const x=Math.floor(R()*w),y=Math.floor(R()*h);
+    if(!keep(x,y))continue;
+    const len=1+Math.floor(R()*4),horiz=R()<.5;
+    for(let j=0;j<len;j++){
+      const a=horiz?x+j:x, b=horiz?y:y+j;
+      if(a<w&&b<h&&keep(a,b))obs.add(kk(a,b));
+    }
+  }
+  for(let i=0;i<w*h*treePct;i++){
+    const x=Math.floor(R()*w),y=Math.floor(R()*h);
+    if(!keep(x,y)||obs.has(kk(x,y)))continue;
+    tree.add(kk(x,y));
+  }
+  return{n:name,w:w,h:h,sub:sub,max:10,obs:obs,tree:tree,
+    chasm:new Set(),zone:new Set(),
+    A:[[0,h-1]],B:[[w-1,0]],note:note};
+}
+const MAPS={
+ plains:genMap("Равнина","22×22 · открытый бой",22,22,.055,.070,20260814,
+   "Мало укрытий, много простора. Снайперы чувствуют себя хорошо."),
+ grove:genMap("Роща","26×26 · лесной бой",26,26,.035,.150,777001,
+   "Много деревьев: зайдите в крону — и вас не увидят."),
+ ruins:genMap("Руины","28×28 · городской бой",28,28,.090,.045,424242,
+   "Плотная застройка из стен. Бой идёт на коротких линиях.")
+};
+// Capture map: 22×22 с чистой 3×3 зоной в центре
+(function(){
+  const src=genMap("Захват","22×22 · захват центра",22,22,.055,.070,20260814,
+    "Удержите центральную зону (3×3) 5 ходов подряд — победа.");
+  const cx=Math.floor(src.w/2), cy=Math.floor(src.h/2);
+  for(let dx=-1;dx<=1;dx++)for(let dy=-1;dy<=1;dy++){
+    const k=kk(cx+dx,cy+dy);
+    src.obs.delete(k);src.tree.delete(k);src.zone.add(k);
+  }
+  src.captureGoal=5;
+  MAPS.capture=src;
+})();
+
+
+let S=null,sel=null,act=null,uid=0;
+let cfg={mode:null,map:null,size:null,team:[],wpn:{},orb:'barrage',titan:'atlas',weather:'clear'};
+const MODES=[
+ {v:"ai",b:"Против компьютера",s:"Вы ведёте весь свой отряд"},
+ {v:"pvp",b:"Вдвоём за экраном",s:"Ходы по очереди на одном устройстве"},
+ {v:"coop",b:"В команде с ботами",s:"Вы ведёте одного робота, союзники — боты"}];
+const SIZES=[{v:1,b:"1 на 1"},{v:2,b:"2 на 2"},{v:3,b:"3 на 3"},{v:5,b:"5 на 5"},{v:8,b:"8 на 8"},{v:10,b:"10 на 10"}];
+
+function opts(host,items,cur,fn){
+  host.innerHTML="";
+  for(const it of items){
+    const b=document.createElement("button");
+    b.className="opt";b.type="button";
+    b.setAttribute("aria-pressed",String(cur===it.v));
+    b.innerHTML="<b>"+it.b+"</b>"+(it.s?"<small>"+it.s+"</small>":"");
+    if(it.dis)b.disabled=true;
+    b.onclick=()=>fn(it.v);
+    host.appendChild(b);
+  }
+}
+function teamSize(){return cfg.mode==="coop"?1:(cfg.size||0);}
+function drawMenu(){
+  opts($("optMode"),MODES,cfg.mode,v=>{cfg.mode=v;cfg.team=[];drawMenu();});
+  opts($("optMap"),Object.keys(MAPS).map(k=>({v:k,b:MAPS[k].n,s:MAPS[k].sub})),cfg.map,v=>{
+    cfg.map=v;if(cfg.size>MAPS[v].max)cfg.size=null;
+    if(MAPS[v].only)cfg.team=cfg.team.filter(t=>MAPS[v].only.includes(t));
+    drawMenu();});
+  const M=cfg.map?MAPS[cfg.map]:null;
+  opts($("optSize"),SIZES.map(s=>({...s,
+    s:s.v===1?"дуэль":(s.v>=8?"массовое сражение":(s.v>=5?"крупный бой":"основной формат")),
+    dis:M?s.v>M.max:true})),cfg.size,v=>{
+    cfg.size=v;const n=teamSize();if(cfg.team.length>n)cfg.team=cfg.team.slice(0,n);drawMenu();});
+
+  const need=teamSize(),pool=(M&&M.only)?M.only:IDS,host=$("picker");
+  const baseOf=k=>k.indexOf("U:")===0?k.slice(2):k;
+  host.innerHTML="";
+  const hostU=$("pickerU");hostU.innerHTML="";
+  const entries=[];
+  for(const id of IDS)entries.push({id:id,ult:false});
+  for(const id of IDS)entries.push({id:id,ult:true});
+  for(const ent of entries){
+    const id=ent.id,key=ent.ult?("U:"+id):id;
+    const b=R[id],el=document.createElement("button"),on=cfg.team.includes(key);
+    el.className="pick"+(ent.ult?" ultcard":"");el.type="button";
+    el.setAttribute("aria-pressed",String(on));
+    el.disabled=!M||!cfg.size||!pool.includes(id)||(!on&&cfg.team.length>=need);
+    const nw=WPN[NAT[id]];
+    const m=ent.ult?1.5:1;
+    el.innerHTML=(ent.ult?'<span class="ulthex"><i></i><i></i><i></i></span>':'')+
+      '<span class="pickhead"><span class="av">'+ico(id,17)+
+      '</span><span class="pn"><b>'+(ent.ult?'<em class="ulttag">ULTIMATE</em> ':'')+b.n+'</b>'+
+      '<small>'+(ent.ult?"×1.5 · "+ULTPERK[id]:b.c)+'</small></span></span>'+
+      '<span class="pstats">'+
+       '<div><span class="k">HP</span><span class="v">'+Math.round(b.hp*m)+'</span></div>'+
+       '<div><span class="k">Щит</span><span class="v">'+(Math.round(b.sh*m)||"—")+'</span></div>'+
+       '<div><span class="k">Скор</span><span class="v">'+b.sp+'</span></div>'+
+       '<div><span class="k">Дальн</span><span class="v">'+nw.r+'</span></div>'+
+      '</span>';
+    el.onclick=()=>{const i=cfg.team.indexOf(key);
+      if(i>=0)cfg.team.splice(i,1);else if(cfg.team.length<need)cfg.team.push(key);
+      drawMenu();};
+    (ent.ult?hostU:host).appendChild(el);
+  }
+  opts($("optOrb"),Object.keys(ORB).map(k=>({v:k,b:ORB[k].n,s:ORB[k].note})),cfg.orb,
+    v=>{cfg.orb=v;drawMenu();});
+  opts($("optWeather"),[{v:"clear",b:"Ясно",s:"обычная дальность и обзор"},
+    {v:"storm",b:"Шторм",s:"дальность −1, обзор 6 вместо 10"}],cfg.weather||"clear",
+    v=>{cfg.weather=v;drawMenu();});
+  const st=$("stepT");
+  st.style.display="";
+  {
+    const list=Object.keys(TITAN).map(k=>({v:k,b:TITAN[k].n,
+      s:TITAN[k].hp+" HP · "+TITAN[k].w.n+" · урон "+TITAN[k].w.d}));
+    list.push({v:"random",b:"Случайный",s:"выбирается жребием при возрождении"});
+    opts($("optTitan"),list,cfg.titan,v=>{cfg.titan=v;drawMenu();});
+  }
+  drawWeapons();
+  $("pickNote").textContent=(!M||!cfg.size)?"сначала выберите карту и размер":
+    (cfg.mode==="coop"?"выберите 1 робота — им вы и будете играть":
+     "выбрано "+cfg.team.length+" из "+need);
+  $("go").disabled=!(cfg.mode&&cfg.map&&cfg.size&&cfg.team.length===need);
+}
+
+function drawWeapons(){
+  const box=$("stepW"),host=$("wsel");
+  if(!cfg.team.length){box.style.display="none";host.innerHTML="";return;}
+  box.style.display="";host.innerHTML="";
+  for(const key of cfg.team){
+    const id=key.indexOf("U:")===0?key.slice(2):key, ult=key.indexOf("U:")===0;
+    if(!cfg.wpn[key])cfg.wpn[key]=NAT[id];
+    const row=document.createElement("div");row.className="wrow"+(ult?" ultrow":"");
+    let html='<h4>'+(ult?"ULTIMATE ":"")+R[id].n+'</h4><div class="wopts">';
+    for(const k of armory(id)){
+      const w=WPN[k],on=cfg.wpn[key]===k;
+      html+='<button type="button" class="wo" data-w="'+k+'" aria-pressed="'+on+'">'+
+        '<b>'+w.n+(k===NAT[id]?" ★":"")+'</b>'+
+        '<small>урон '+w.d+' · дальн '+w.r+(w.min?"/"+w.min:"")+' · перез '+w.rl+'</small>'+
+        '<small class="wtrait">◆ '+trait(w)+'</small></button>';
+    }
+    html+='</div><div class="subhead">Ультимативные пушки</div><div class="wopts">';
+    for(const k of armory(id)){
+      const w=ULTW(WPN[k]),uk="U:"+k,on=cfg.wpn[key]===uk;
+      html+='<button type="button" class="wo woult" data-w="'+uk+'" aria-pressed="'+on+'">'+
+        '<b><em class="ulttag">ULT</em> '+WPN[k].n+'</b>'+
+        '<small>урон '+w.d+' · дальн '+w.r+(w.min?"/"+w.min:"")+' · перез '+w.rl+'</small>'+
+        '<small class="wtrait">◆ '+trait(w)+'</small></button>';
+    }
+    html+='</div>';
+    row.innerHTML=html;
+    row.querySelectorAll(".wo").forEach(function(bt){
+      bt.onclick=function(){cfg.wpn[key]=bt.getAttribute("data-w");drawMenu();};
+    });
+    host.appendChild(row);
+  }
+}
+drawMenu();
+$("go").onclick=start;
+$("quit").onclick=toMenu;
+$("skip").onclick=()=>{
+  if(!net.active)return;
+  const myPeer=net.myPeerId;
+  if(!myPeer)return;
+  // Mark all my units as spent
+  alive(S.side).filter(u=>u.owner===myPeer).forEach(u=>{u.moved=true;u.acted=true;});
+  if(net.role==='host'){
+    afterAction();
+  } else {
+    net.send({type:'skip',peerId:myPeer});
+  }
+};
+$("again").onclick=()=>{
+  $("over").classList.remove("on");
+  if(cfg.campaign&&campState&&!campState.done){
+    $("game").style.display="none";
+    $("campaign").style.display="block";
+    renderCampaign();
+  }else if(cfg.campaign&&campState&&campState.done){
+    campState=null;
+    $("game").style.display="none";
+    $("modeSelect").style.display="block";
+  }else{
+    toMenu();
+  }
+};
+$("end").onclick=()=>endTurn();
+$("cancel").onclick=()=>{act=null;render();};
+function toMenu(){$("game").style.display="none";
+  if(cfg.campaign){$("campaign").style.display="block";renderCampaign();}
+  else{$("menu").style.display="block";}}
+
+$("pickGod").onclick=()=>{cfg.campaign=false;$("modeSelect").style.display="none";$("menu").style.display="block";};
+$("menuBack").onclick=()=>{$("menu").style.display="none";$("modeSelect").style.display="block";};
+$("pickCamp").onclick=()=>{$("modeSelect").style.display="none";campState=newCampaign();$("campaign").style.display="block";renderCampaign();};
+$("campBack").onclick=()=>{$("campaign").style.display="none";$("modeSelect").style.display="block";};
+
+let campState=null;
+
+// Fresh campaign: one RANDOM starter robot + its native weapon unlocked.
+function newCampaign(){
+  const starter=IDS[Math.floor(Math.random()*IDS.length)];
+  return {mission:0, robots:[starter], weapons:{[starter]:[NAT[starter]]}, ults:[],
+          pilot:starter, wpn:NAT[starter], useUlt:false, reward:null, done:false};
+}
+
+// Grant one RANDOM reward: pick a type that still has candidates, then a random instance.
+function grantReward(){
+  const c=campState;
+  const lockedRobots=IDS.filter(id=>!c.robots.includes(id));
+  const weaponCands=[];
+  c.robots.forEach(id=>armory(id).forEach(k=>{
+    if(!(c.weapons[id]||[]).includes(k))weaponCands.push({id,k});}));
+  const ultCands=c.robots.filter(id=>!c.ults.includes(id));
+  const types=[];
+  if(lockedRobots.length)types.push("robot");
+  if(weaponCands.length)types.push("weapon");
+  if(ultCands.length)types.push("ult");
+  if(!types.length){c.reward={type:"",text:"Всё уже открыто — вы во всеоружии."};return;}
+  const t=types[Math.floor(Math.random()*types.length)];
+  if(t==="robot"){
+    const id=lockedRobots[Math.floor(Math.random()*lockedRobots.length)];
+    c.robots.push(id);c.weapons[id]=[NAT[id]];
+    c.reward={type:"robot",text:"Новый робот: "+R[id].n+" ("+R[id].c+")"};
+  }else if(t==="weapon"){
+    const p=weaponCands[Math.floor(Math.random()*weaponCands.length)];
+    (c.weapons[p.id]=c.weapons[p.id]||[NAT[p.id]]).push(p.k);
+    c.reward={type:"weapon",text:"Оружие для "+R[p.id].n+": "+WPN[p.k].n};
+  }else{
+    const id=ultCands[Math.floor(Math.random()*ultCands.length)];
+    c.ults.push(id);
+    c.reward={type:"ult",text:"ULTIMATE-версия: "+R[id].n+" — "+ULTPERK[id]};
+  }
+}
+
+// mission script: what each mission is
+const MISSIONS=[
+  {type:"tutorial",map:"plains",foe:1,titan:false,
+   title:"Обучение: первый бой",
+   brief:"Добро пожаловать на арену, пилот. Один противник, простая карта. Освойтесь с управлением — я подскажу каждый шаг."},
+  {type:"duel",map:"plains",foe:1,titan:false,
+   title:"Дуэль",
+   brief:"Теперь сам. Один на один, без подсказок. Уничтожьте противника."},
+  {type:"team",map:"grove",foe:2,ally:1,titan:false,
+   title:"В команде",
+   brief:"Вам придан союзник-бот. Вдвоём против двоих в роще — деревья скрывают от чужих глаз, используйте это."},
+  {type:"duel",map:"ruins",foe:1,titan:false,
+   title:"Городской бой",
+   brief:"Руины. Тесно, много стен. Дуэль — держите линию огня чистой."},
+  {type:"titan",map:"grove",foe:0,titan:true,
+   title:"Первый титан",
+   brief:"Разведка докладывает: противник вызвал ТИТАНА. Это тяжёлая машина с бронёй и мощным оружием — обычных бойцов рядом нет. Уничтожьте титана."},
+  {type:"team",map:"plains",foe:2,ally:1,titan:true,
+   title:"Титан и эскорт",
+   brief:"Титан противника идёт не один. Вы с союзником — против титана и его прикрытия."},
+  {type:"boss",map:"ruins",foe:3,ally:1,titan:true,
+   title:"Финал",
+   brief:"Последний рубеж. Полный отряд противника с титаном. Покажите всё, чему научились."}
+];
+
+function renderCampaign(){
+  if(!campState)campState=newCampaign();
+  const c=campState;
+  const m=MISSIONS[Math.min(c.mission,MISSIONS.length-1)];
+  $("campWinsLine").textContent="Миссия "+(c.mission+1)+" из "+MISSIONS.length+" · "+m.title;
+
+  // reward banner (from previous win)
+  const rb=$("campReward");
+  if(c.reward){
+    rb.style.display="";
+    rb.className="reward"+(c.reward.type?(" r-"+c.reward.type):"");
+    rb.innerHTML="<b>Награда за прошлую миссию</b><span>"+c.reward.text+"</span>";
+  }else rb.style.display="none";
+
+  // robot picker — only UNLOCKED robots
+  const rh=$("campRobots");rh.innerHTML="";
+  for(const id of c.robots){
+    const b=R[id],on=c.pilot===id,isU=c.ults.includes(id);
+    const el=document.createElement("button");el.type="button";
+    el.className="pick"+(on?" sel":"")+(isU?" hasult":"");el.setAttribute("aria-pressed",String(on));
+    const nw=WPN[NAT[id]];
+    el.innerHTML='<span class="pickhead"><span class="av">'+ico(id,17)+
+      '</span><span class="pn"><b>'+b.n+(isU?' ★':'')+'</b><small>'+b.c+'</small></span></span>'+
+      '<span class="pstats">'+
+      '<div><span class="k">HP</span><span class="v">'+b.hp+'</span></div>'+
+      '<div><span class="k">Щит</span><span class="v">'+(b.sh||"—")+'</span></div>'+
+      '<div><span class="k">Скор</span><span class="v">'+b.sp+'</span></div>'+
+      '<div><span class="k">Дальн</span><span class="v">'+nw.r+'</span></div>'+
+      '</span>';
+    el.onclick=()=>{
+      c.pilot=id;
+      const uw=c.weapons[id]||[NAT[id]];
+      if(!uw.includes(c.wpn))c.wpn=uw[0];
+      if(!c.ults.includes(id))c.useUlt=false;
+      renderCampaign();
+    };
+    rh.appendChild(el);
+  }
+
+  // weapon picker — only UNLOCKED weapons for the chosen pilot
+  const wh=$("campWeapons");wh.innerHTML="";
+  const unlockedW=c.weapons[c.pilot]||[NAT[c.pilot]];
+  for(const k of unlockedW){
+    const w=WPN[k],on=c.wpn===k;
+    const bt=document.createElement("button");bt.type="button";
+    bt.className="wo"+(on?" sel":"");bt.setAttribute("aria-pressed",String(on));
+    bt.innerHTML="<b>"+w.n+(k===NAT[c.pilot]?" ★":"")+"</b>"+
+      "<small>урон "+w.d+" · дальн "+w.r+(w.min?"/"+w.min:"")+" · перез "+w.rl+"</small>"+
+      "<small class=\"wtrait\">◆ "+trait(w)+"</small>";
+    bt.onclick=()=>{c.wpn=k;renderCampaign();};
+    wh.appendChild(bt);
+  }
+
+  // ULTIMATE toggle — only if this robot's ultimate is unlocked
+  const ub=$("campUlt");
+  if(c.ults.includes(c.pilot)){
+    ub.style.display="";
+    ub.innerHTML='<button type="button" id="ultToggle" class="ulttoggle'+(c.useUlt?" on":"")+
+      '" aria-pressed="'+c.useUlt+'"><b>'+(c.useUlt?"ULTIMATE включён":"Выставить как ULTIMATE")+
+      '</b><small>'+ULTPERK[c.pilot]+' · ×1.5 урон и HP</small></button>';
+    $("ultToggle").onclick=()=>{c.useUlt=!c.useUlt;renderCampaign();};
+  }else{ub.style.display="none";c.useUlt=false;}
+
+  $("campGo").disabled=!(c.pilot&&c.wpn);
+}
+
+function startMission(){
+  const c=campState;
+  const m=MISSIONS[Math.min(c.mission,MISSIONS.length-1)];
+  const allyN=m.ally||0;
+  const ultOn=c.useUlt&&c.ults.includes(c.pilot);
+  const pilotKey=ultOn?("U:"+c.pilot):c.pilot;
+  const team=[pilotKey];
+  // allies: random other robots (AI-controlled)
+  const others=IDS.filter(id=>id!==c.pilot);
+  for(let i=0;i<allyN;i++)team.push(others[Math.floor(Math.random()*others.length)]);
+  const wpn={};wpn[pilotKey]=ultOn?("U:"+c.wpn):c.wpn;
+  cfg={mode:allyN>0?"coop":"ai",map:m.map,size:team.length,foeSize:m.foe,
+    team:team,wpn:wpn,orb:["barrage","emp","supply","smoke"][Math.floor(Math.random()*4)],
+    titan:"random",campaign:true,weather:"clear",
+    tutorial:m.type==="tutorial",forceTitan:!!m.titan};
+  $("brief").classList.remove("on");
+  $("campaign").style.display="none";
+  start();
+  // force-spawn an enemy titan for titan missions
+  if(m.titan){spawnMissionTitan();}
+  if(m.type==="tutorial")startTutorial();
+  render();
+}
+
+function spawnMissionTitan(){
+  const M=M_();
+  const ids=Object.keys(TITAN);
+  const tid=ids[Math.floor(Math.random()*ids.length)];
+  const base=M.B[0];
+  const probe={bw:TITAN[tid].bw||1,bh:TITAN[tid].bh||1};
+  const spot=freeSpot({x:base[0],y:base[1]},1,probe);
+  if(spot){
+    const t=mkTitan(tid,1,spot);
+    S.units.push(t);
+    say("g","Противник вывел титана "+TITAN[tid].n+" ("+t.hp+" HP)!");
+  }
+}
+
+function showBrief(){
+  const c=campState;
+  const m=MISSIONS[Math.min(c.mission,MISSIONS.length-1)];
+  const ultOn=c.useUlt&&c.ults.includes(c.pilot);
+  $("briefCmd").textContent="Миссия "+(c.mission+1)+": "+m.title;
+  $("briefText").textContent=m.brief;
+  $("briefSquad").textContent="Ваш робот: "+R[c.pilot].n+(ultOn?" ULTIMATE":"")+" · "+WPN[c.wpn].n+".";
+  c.reward=null;
+  $("campaign").style.display="none";
+  $("brief").classList.add("on");
+}
+
+$("campGo").onclick=showBrief;
+$("briefGo").onclick=startMission;
+
+// --- tutorial overlay ---
+let tutStep=0;
+const TUT=[
+  "Синяя фишка с золотой рамкой — ваш робот. Нажмите на него: снизу откроется панель действий. Две точки над роботом — это ход и выстрел на этот раунд.",
+  "Кнопка «Ходить» → загорятся синие клетки, куда можно дойти. Нажмите клетку — робот переместится и повернётся туда. Ноги смотрят по направлению шага.",
+  "Кнопка «Стрелять» → цели в зоне подсветятся оранжевым, к ним тянется линия огня. Стена или край карты рвут линию. Нажмите по цели, чтобы выстрелить. Башня развернётся к ней.",
+  "Жёлтая кнопка «Способность» — особый приём вашего робота, у каждого свой и со своей перезарядкой. Иногда бьёт по клетке, иногда по себе — читайте подсказку сверху.",
+  "«Отмена» сбрасывает выбранное действие, если передумали. Когда обе точки над роботом погасли — он отработал ход.",
+  "Кнопка «Завершить ход» вверху (она всегда на виду) передаёт ход противнику. Уничтожьте всех врагов, чтобы победить. Вперёд!"
+];
+function startTutorial(){tutStep=0;showTut();}
+function showTut(){
+  if(tutStep>=TUT.length){$("tutbox").classList.remove("on");return;}
+  $("tutText").textContent=TUT[tutStep];
+  $("tutStep").textContent=(tutStep+1)+"/"+TUT.length;
+  $("tutbox").classList.add("on");
+}
+if($("tutNext"))$("tutNext").onclick=()=>{tutStep++;showTut();};
+
+
+function sectionBlocks(M,side){
+  const w=M.w,h=M.h;
+  const blk=(bx,by)=>[[bx,by],[bx+1,by],[bx,by+1],[bx+1,by+1]]
+    .filter(p=>p[0]>=0&&p[1]>=0&&p[0]<w&&p[1]<h);
+  if(side===0) return[blk(0,h-6),blk(0,h-2),blk(4,h-2)];
+  return[blk(w-2,4),blk(w-2,0),blk(w-6,0)];
+}
+function spawnCells(M,side,n){
+  const blocks=sectionBlocks(M,side);
+  const order=n===1?[1]:(n===2?[0,2]:[0,1,2]);
+  const used=new Set(),out=[];
+  const free=p=>{const k=kk(p[0],p[1]);
+    return !used.has(k)&&!M.obs.has(k)&&!M.tree.has(k)&&!M.chasm.has(k);};
+  for(let i=0;i<n;i++){
+    const blk=blocks[order[i%order.length]];
+    let spot=blk.find(free);
+    if(!spot){
+      for(const b of blocks){spot=b.find(free);if(spot)break;}
+    }
+    if(!spot){
+      outer:
+      for(let r=1;r<=12;r++){
+        const a=blocks[order[i%order.length]][0];
+        for(let dx=-r;dx<=r;dx++)for(let dy=-r;dy<=r;dy++){
+          const q=[a[0]+dx,a[1]+dy];
+          if(q[0]<0||q[1]<0||q[0]>=M.w||q[1]>=M.h)continue;
+          if(free(q)){spot=q;break outer;}
+        }
+      }
+    }
+    if(spot){used.add(kk(spot[0],spot[1]));out.push([spot[0],spot[1]]);}
+  }
+  return out;
+}
+function mkTitan(tid,side,p){
+  const b=TITAN[tid];
+  return{u:++uid,titan:true,tid:tid,id:tid,side:side,x:p.x,y:p.y,big:((b.bw||1)>1||(b.bh||1)>1)?1:0,bw:(b.bw||1),bh:(b.bh||1),
+    hp:b.hp,max:b.hp,sh:b.sh,bot:false,rdy:0,cd:0,cd2:0,moved:false,acted:false,
+    dot:0,slow:0,hidden:false,revealed:0,anchor:false,rush:0,fly:false,bonus:0,
+    mark:null,salvo:false,minesLeft:0,emp:0,siege:false,over:0};
+}
+function makeUlt(u){
+  const b=R[u.id];
+  u.ultR=true;
+  u.max=Math.round(b.hp*1.5);u.hp=u.max;
+  u.sh=Math.round((b.sh||0)*1.5);
+  u.perk=true;
+  return u;
+}
+function mk(id,side,p,wid){const b=R[id];
+  const oks=Object.keys(ORB);
+  let uw=false;
+  if(wid&&wid.indexOf("U:")===0){uw=true;wid=wid.slice(2);}
+  return{u:++uid,id,side,wid:wid||NAT[id],x:p[0],y:p[1],hp:b.hp,max:b.hp,sh:b.sh,bot:false,
+   rdy:0,cd:0,moved:false,acted:false,dot:0,slow:0,hidden:false,revealed:0,emp:0,
+   anchor:false,rush:0,fly:false,bonus:0,mark:null,salvo:false,minesLeft:0,emp:0,
+   orb:oks[Math.floor(Math.random()*oks.length)],ultW:uw};}
+
+function start(){
+  const M=MAPS[cfg.map],pool=M.only||IDS;
+  const mine=[...cfg.team];
+  while(mine.length<cfg.size)mine.push(pool[Math.floor(Math.random()*pool.length)]);
+  const baseId=k=>k.indexOf("U:")===0?k.slice(2):k;
+  const isUlt=k=>k.indexOf("U:")===0;
+  const foeN=(cfg.foeSize!==undefined&&cfg.foeSize!==null)?cfg.foeSize:cfg.size;
+  const foe=[];
+  for(let i=0;i<foeN;i++)foe.push(pool[Math.floor(Math.random()*pool.length)]);
+  const first=Math.random()<.5?0:1;
+  S={map:M,turn:1,side:first,first:first,units:[],mines:{0:[],1:[]},domes:[],summon:{0:true,1:true},over:false,
+     wrecks:[],orb:{0:0,1:0},strikes:[],smoke:[],turrets:[],respawns:[],weather:cfg.weather||"clear",
+     cap:{holder:-1,ticks:0}};   // capture state: holder=side holding zone, ticks=consecutive turns
+  const sA=spawnCells(M,0,mine.length), sB=spawnCells(M,1,foe.length);
+  mine.forEach((key,i)=>{
+    const id=baseId(key);
+    const un=mk(id,0,sA[i]||M.A[0],cfg.wpn[id]||cfg.wpn[key]);
+    if(isUlt(key))makeUlt(un);
+    S.units.push(un);});
+  foe.forEach((id,i)=>S.units.push(mk(id,1,sB[i]||M.B[0])));
+  if(cfg.mode==="coop")S.units.filter(u=>u.side===0).forEach((u,i)=>{u.bot=i>0;});
+  sel=null;act=null;
+  $("menu").style.display="none";$("game").style.display="block";
+  $("mtag").textContent={ai:"ПРОТИВ КОМПЬЮТЕРА",pvp:"ДВОЕ ИГРОКОВ",coop:"В КОМАНДЕ С БОТАМИ"}[cfg.mode];
+  $("rainFX").style.display=S.weather==="storm"?"block":"none";
+  const isCapture=!!(M.captureGoal);
+  $("capBar").classList.toggle("on",isCapture);
+  if(isCapture)updateCapBar();
+  $("log").innerHTML="";
+  say("","Карта: "+M.n+". "+M.note);
+  if(S.weather==="storm")say("","Шторм: дальность стрельбы у всех −1, видимость хуже обычного.");
+  say("","Жребий: первой ходит сторона "+(first?"B":"A")+".");
+  beginSide();
+}
+const U=u=>DEF(u);
+const alive=s=>S.units.filter(u=>u.hp>0&&(s===undefined||u.side===s));
+function botUnit(u){
+  if(u.side===1&&cfg.mode!=="pvp")return true;
+  if(cfg.mode==="coop"&&u.side===0&&u.bot)return true;
+  return false;
+}
+function viewSide(){return cfg.mode==="pvp"?S.side:0;}
+function detectRange(){return S.weather==="storm"?3:4;}
+function concealed(u,viewer){
+  if(u.hp<=0)return false;
+  if(u.side===viewer)return false;
+  if(u.revealed>0)return false;
+  if(u.hidden)return true;
+  if(inTree(u)&&!alive(viewer).some(f=>D(f,u)<=1))return true;
+  return !alive(viewer).some(f=>D(f,u)<=detectRange());
+}
+function myTurn(){const a=alive(S.side);return a.length>0&&!a.every(botUnit);}
+
+const M_=()=>S.map;
+
+function BW(u){return (u&&u.bw)||1;}
+function BH(u){return (u&&u.bh)||1;}
+function SZ(u){return Math.max(BW(u),BH(u));}
+function shapeOf(u){
+  if(u&&u.tid==="atlas"){
+    const d=u.lastDir||{dx:0,dy:1};
+    if(d.dx&&d.dy)return{bw:1,bh:1};
+    if(d.dx)return{bw:2,bh:1};
+    return{bw:1,bh:2};
+  }
+  return{bw:BW(u),bh:BH(u)};
+}
+function cellsOf(u){const o=[],sh=shapeOf(u);
+  for(let i=0;i<sh.bw;i++)for(let j=0;j<sh.bh;j++)o.push({x:u.x+i,y:u.y+j});return o;}
+function D(a,b){
+  const sa=shapeOf(a),sb=shapeOf(b);
+  if(sa.bw===1&&sa.bh===1&&sb.bw===1&&sb.bh===1)return cn(a,b);
+  let m=999;
+  for(const p of cellsOf(a))for(const q of cellsOf(b))m=Math.min(m,cn(p,q));
+  return m;}
+function unitAt(x,y){
+  return S.units.find(function(u){const sh=shapeOf(u);
+    return u.hp>0&&x>=u.x&&y>=u.y&&x<u.x+sh.bw&&y<u.y+sh.bh;});}
+function fits(u,x,y){
+  const sh=shapeOf(u);
+  for(let i=0;i<sh.bw;i++)for(let j=0;j<sh.bh;j++){
+    const a=x+i,b=y+j;
+    if(!inside(a,b)||blocked(a,b))return false;
+    const o=unitAt(a,b); if(o&&o!==u)return false;}
+  return true;}
+
+function solid(x,y){const M=M_(),k=kk(x,y);return M.obs.has(k)||M.tree.has(k);}
+function isTree(x,y){return M_().tree.has(kk(x,y));}
+function inTree(u){return cellsOf(u).some(c=>isTree(c.x,c.y));}
+function cover(x,y){const M=M_();
+  if(solid(x,y)||(M.breach&&M.breach.has(kk(x,y))))return true;
+  return S.smoke.some(c=>c.x===x&&c.y===y);}
+function blocked(x,y){return M_().obs.has(kk(x,y))||M_().chasm.has(kk(x,y));}
+function occ(x,y,not){const u=unitAt(x,y);return !!(u&&u!==not);}
+function inside(x,y){return x>=0&&y>=0&&x<M_().w&&y<M_().h;}
+function los(a,b){const n=Math.max(Math.abs(b.x-a.x),Math.abs(b.y-a.y));
+  for(let i=1;i<n;i++){const x=Math.round(a.x+(b.x-a.x)*i/n),y=Math.round(a.y+(b.y-a.y)*i/n);
+    if(cover(x,y))return false;}return true;}
+function domeCut(a,b){if(cn(a,b)<=1)return false;
+  return S.domes.some(d=>(cn(d,b)<=2)!==(cn(d,a)<=2));}
+function reach(u){
+  if(u.frozen>0)return new Map();
+  let sp=U(u).sp+(u.rush>0?2:0)-(u.slow>0?1:0);
+  if(u.anchor&&!(u.perk&&u.id==="obelisk"))sp=0;
+  const out=new Map();if(sp<=0)return out;
+  const q=[[u.x,u.y,0]],seen=new Set([kk(u.x,u.y)]);
+  while(q.length){const cur=q.shift(),x=cur[0],y=cur[1],d=cur[2];
+    if(d>=sp)continue;
+    for(let dx=-1;dx<=1;dx++)for(let dy=-1;dy<=1;dy++){
+      if(!dx&&!dy)continue;
+      const nx=x+dx,ny=y+dy,k=kk(nx,ny);
+      if(!inside(nx,ny)||seen.has(k))continue;
+      if(!fits(u,nx,ny))continue;
+      if(dx&&dy){
+        if(u.big){ if(!fits(u,x+dx,y)&&!fits(u,x,y+dy))continue; }
+        else if(blocked(x+dx,y)&&blocked(x,y+dy))continue;
+      }
+      seen.add(k);out.set(k,d+1);q.push([nx,ny,d+1]);}}
+  return out;
+}
+function fireLine(u,t){
+  for(const p of cellsOf(u))for(const q of cellsOf(t)){
+    const dx=q.x-p.x,dy=q.y-p.y;
+    if(!dx&&!dy)continue;
+    if(dx&&dy&&Math.abs(dx)!==Math.abs(dy))continue;
+    if(los(p,q))return true;
+  }
+  return false;
+}
+function canSee(u,t){
+  if(t.revealed<=0){
+    if(t.hidden)return false;
+    if(inTree(t)&&D(u,t)>1)return false;
+    if(D(u,t)>detectRange())return false;
+  }
+  const w=W(u),d=D(u,t);
+  const eff=Math.max(1,w.r-(S.weather==="storm"?1:0));
+  if(d>eff)return false;
+  if(w.min&&d<w.min)return false;
+  if(domeCut(u,t))return false;
+  if(w.bend||w.arc||u.fly)return true;
+  return fireLine(u,t);
+}
+function dmgOf(u,t){const w=W(u);
+  const fort=(u.fortDmg>0?4:0);
+  const ultFly=(u.perk&&u.id==="athier"&&u.fly)?2:0;
+  const raw=Math.round((w.d+u.bonus+fort+ultFly+(u.fly?1:0)+((w.pb&&D(u,t)<=1)?w.pb:0))*(u.siege?1.5:1));
+  return{d:raw,clear:true};}
+
+function say(c,t){const l=$("log"),p=document.createElement("p");
+  p.className=c;p.textContent=t;l.appendChild(p);l.scrollTop=l.scrollHeight;}
+function hurt(t,a,pi,src){
+  if(t.regen>0)a*=2;
+  if(!pi&&t.sh>0&&t.emp<=0)a-=Math.min(t.sh,a);
+  if(a<=0){say("",U(t).n+": щит поглотил удар.");return;}
+  if(t.barrier>0){
+    const abs=Math.min(t.barrier,a);
+    t.barrier-=abs;a-=abs;
+    if(t.barrier<=0)say("",U(t).n+": физические щиты разрушены (приняли "+abs+").");
+    else say("",U(t).n+": физический щит принял "+abs+", осталось "+t.barrier+".");
+    if(a<=0)return;
+  }
+  t.hp-=a;say("h",U(t).n+" −"+a+" ("+Math.max(0,t.hp)+" HP)");
+  if(t.hp<=0){say("k",U(t).n+" уничтожен. На месте гибели остались обломки.");
+    t.hidden=false;S.wrecks.push({x:t.x,y:t.y});
+    if(src&&src!==t&&src.side!==t.side)src.kills=(src.kills||0)+1;
+    queueTitanRespawn(t);}
+  else if(t.fly){t.fly=false;say("",U(t).n+" сбит на землю.");}
+}
+function fire(u,t){
+  const r=dmgOf(u,t),w=W(u);
+  say("",U(u).n+" → "+U(t).n);
+  hurt(t,r.d,w.pi,u);
+  const aoe=u.salvo?2:(w.aoe||0);
+  if(aoe)for(const e of alive())if(e!==t&&e.side!==u.side&&cn(e,t)<=aoe)hurt(e,r.d,w.pi,u);
+  if(w.dot)t.dot=2;
+  if(w.slow)t.slow=1;
+  if(w.freeze){
+    if(!t.frostMap)t.frostMap={};
+    t.frostMap[u.u]=(t.frostMap[u.u]||0)+1;
+    t.frost=t.frostMap[u.u];
+    if(t.frost>=3){t.frozen=1;t.frostMap[u.u]=0;t.frost=0;
+      say("h",U(t).n+" вмёрз в лёд — пропускает следующий ход.");}
+    else say("",U(t).n+": обледенение "+t.frost+"/3.");
+  }
+  const nd={dx:Math.sign(t.x-u.x)||0,dy:Math.sign(t.y-u.y)||0};
+  if(u.tid==="atlas"){const old=u.lastDir;u.lastDir=nd;
+    if(!fits(u,u.x,u.y))u.lastDir=old;}
+  else u.lastDir=nd;
+  u.salvo=false;u.bonus=0;u.rdy=(u.over>0?0:w.rl);u.acted=true;
+  if(u.hidden&&!(u.perk&&u.id==="crisis")){u.hidden=false;say("",U(u).n+" раскрыт выстрелом.");}
+  check();
+}
+function boom(u){say("",U(u).n+": взрыв рывка!");
+  for(const e of alive())if(e.side!==u.side&&cn(e,u)<=1)hurt(e,8,false);
+  u.rush=0;check();}
+function titanAbility(u,slot){
+  const b=TITAN[u.tid],a=slot===2?b.ab2:b.ab;
+  if(u.tid==="atlas"&&slot===2){
+    let c=0;
+    for(const e of alive())if(e.side!==u.side&&D(u,e)<=1){hurt(e,5,false);c++;}
+    say("h","Atlas: металлический шторм — задето целей: "+c+".");}
+  else if(u.tid==="mull"&&slot===2){u.over=2;u.rdy=0;say("","Mull: форсаж, 2 хода без перезарядки.");}
+  else if(u.tid==="fort"&&slot===1){u.anchor=true;u.anchorT=2;u.fortDmg=2;
+    say("","Fort: бастион на 2 хода, +4 урона к выстрелу.");}
+  else if(u.tid==="fort"&&slot===2){u.regen=4;
+    say("g","Fort: регенерация 4 хода (+2 за ход), но входящий урон удваивается.");}
+  if(slot===2)u.cd2=a.cd; else u.cd=a.cd;
+  u.acted=true;
+}
+function titanJump(u,x,y){
+  const b=TITAN[u.tid];
+  if(u.tid==="mull"){
+    u.x=x;u.y=y;
+    let c=0;
+    for(const e of alive())if(e.side!==u.side&&D(u,e)<=1){
+      if(e.fly){e.fly=false;hurt(e,3,false);if(e.hp>0)hurt(e,5,false);
+        say("h",U(e).n+" сбит с воздуха ударной волной.");}
+      else hurt(e,3,false);
+      if(e.hp>0)knockback(u,e);
+      c++;}
+    u.cd=b.ab.cd;u.moved=true;u.acted=true;
+    say("h","Mull врывается в "+nmc(u)+": задето целей — "+c+".");
+  } else {
+    u.x=x;u.y=y;u.cd=b.ab.cd;u.moved=true;
+    say("","Atlas перепрыгивает в "+nmc(u)+".");
+  }
+  act=null;
+}
+function knockback(from,e){
+  const dx=Math.sign(e.x-from.x),dy=Math.sign(e.y-from.y);
+  if(!dx&&!dy)return;
+  const nx=e.x+dx,ny=e.y+dy;
+  if(inside(nx,ny)&&fits(e,nx,ny)){e.x=nx;e.y=ny;}
+}
+function selfAbility(u){
+  if(u.titan){titanAbility(u,1);return;}
+  const a=U(u).ab;
+  if(u.id==="tirkin"){u.rush=2;if(u.perk)u.cd=0;say("","Тиркин: рывок, 2 хода ускорения.");}
+  else if(u.id==="raiken"){
+    S.domes.push({x:u.x,y:u.y,side:u.side,until:S.turn+1});
+    for(const f of alive(u.side))if(cn(f,u)<=2)f.hp=Math.min(f.max,f.hp+(u.perk?6:3));
+    for(const e of alive())if(e.side!==u.side&&cn(e,u)<=2)hurt(e,1,false);
+    say("g","Райкен: купол, союзникам +3 прочности.");}
+  else if(u.id==="crisis"){u.hidden=true;say("","Кристаликс уходит в невидимость.");}
+  else if(u.id==="athier"){u.fly=true;say("","Атьер взлетает: +1 урон.");}
+  else if(u.id==="obelisk"){u.anchor=true;u.anchorT=2;
+    if(u.baseSh===undefined)u.baseSh=u.sh;
+    u.sh=4;say("","Обелиск закрепляется: щит 4 на 2 хода, двигаться не может.");}
+  else if(u.id==="grom"){u.salvo=true;if(u.perk)u.cd=0;say("","Гром готовит залп 5×5.");}
+  u.cd=a.cd;u.acted=true;
+}
+function cellAbility(u,x,y){
+  const a=U(u).ab;
+  if(u.titan){titanJump(u,x,y);}
+  else if(u.id==="baglior"){u.mark={x:x,y:y};u.acted=true;
+    say("","Баглиор: метка в "+nmc({x:x,y:y})+".");act=null;}
+  else if(u.id==="verdict"){
+    S.mines[1-u.side].push({x:x,y:y});u.minesLeft--;
+    say("","Мина в "+nmc({x:x,y:y})+". Осталось: "+u.minesLeft);
+    if(u.minesLeft<=0){u.cd=a.cd;u.acted=true;act=null;}}
+  else if(u.id==="kerli"){
+    u.barrier=(u.perk?6:4);u.kShield=2;
+    const dx=Math.sign(x-u.x),dy=Math.sign(y-u.y);
+    let spots;
+    if(dx&&dy)spots=[{x:u.x,y:u.y+dy},{x:u.x+dx,y:u.y}];
+    else if(dx)spots=[{x:u.x+dx,y:u.y-1},{x:u.x+dx,y:u.y+1}];
+    else spots=[{x:u.x-1,y:u.y+(dy||1)},{x:u.x+1,y:u.y+(dy||1)}];
+    let placed=0;
+    for(const sp of spots)
+      if(inside(sp.x,sp.y)&&!blocked(sp.x,sp.y)&&!occ(sp.x,sp.y)){
+        S.turrets.push({x:sp.x,y:sp.y,side:u.side,until:S.turn+2});placed++;}
+    u.cd=a.cd;u.acted=true;
+    say("g","Керли: Бастион. Щиты 4 на 2 хода, турелей выставлено: "+placed+".");
+    act=null;}
+  else if(u.id==="feng"){
+    if(!u.fly){
+      // Takeoff without target (handled by button above, but fallback)
+      u.fly=true;u.beam=u.perk?5:3;u.beamT=null;
+      u.cd=U(u).ab.cd;u.acted=true;
+      say("","Hawk взлетает.");
+    } else {
+      // Aim beam at target
+      const t=unitAt(x,y);
+      if(t&&t.side!==u.side){
+        const beamDmg=u.perk?5:3;
+        u.beamT=t.u;
+        hurt(t,beamDmg,false,u);
+        say("h","Hawk наводит луч на "+U(t).n+": "+beamDmg+" урона.");
+        u.acted=true;
+      }
+    }
+    act=null;
+  }
+  render();
+}
+function teleport(u){
+  const m=u.mark;
+  if(!m||occ(m.x,m.y,u)||blocked(m.x,m.y)){say("","Клетка метки занята.");return;}
+  u.x=m.x;u.y=m.y;u.mark=null;u.cd=U(u).ab.cd;u.moved=true;
+  say("","Баглиор телепортируется в "+nmc(u)+".");act=null;render();
+}
+function move(u,x,y){
+  const dx=Math.sign(x-u.x),dy=Math.sign(y-u.y);
+  if(dx||dy)u.moveDir={dx:dx,dy:dy};
+  u.x=x;u.y=y;u.moved=true;
+  const ms=S.mines[u.side];
+  const i=ms.findIndex(m=>m.x===x&&m.y===y);
+  if(i>=0){ms.splice(i,1);say("h",U(u).n+" подрывается на мине!");hurt(u,3,true);u.slow=1;}
+  act=null;check();
+}
+
+
+function wreckNear(u){
+  for(const w of S.wrecks) if(cn(u,w)<=1) return w;
+  return null;
+}
+function collect(u){
+  const w=wreckNear(u);
+  if(!w)return;
+  S.wrecks.splice(S.wrecks.indexOf(w),1);
+  S.orb[u.side]++;
+  u.moved=true;u.acted=true;act=null;sel=null;
+  say("g",U(u).n+" забирает обломки. Заряд орбиталки: "+S.orb[u.side]+".");
+  render();
+}
+function freeSpot(near,side,shape){
+  const bw=(shape&&shape.bw)||1,bh=(shape&&shape.bh)||1;
+  for(let r=0;r<=8;r++)
+    for(let dx=-r;dx<=r;dx++)for(let dy=-r;dy<=r;dy++){
+      const x=near.x+dx,y=near.y+dy;
+      const probe={x:x,y:y,bw:bw,bh:bh,tid:(shape&&shape.tid)};
+      if(inside(x,y)&&inside(x+bw-1,y+bh-1)&&fits(probe,x,y))return{x:x,y:y};}
+  return null;}
+function queueTitanRespawn(t){
+  if(t.titan)return;
+  if(!(t.kills>0))return;
+  if(t.usedTitan)return;
+  t.usedTitan=true;
+  S.respawns.push({side:t.side,id:t.id,turn:S.turn+1});
+  say("g",U(t).n+" заслужил возрождение: в начале следующего хода вернётся титаном.");
+}
+function doTitanRespawns(){
+  if(!S.respawns.length)return;
+  const due=S.respawns.filter(r=>r.side===S.side&&r.turn<=S.turn);
+  if(!due.length)return;
+  S.respawns=S.respawns.filter(r=>!due.includes(r));
+  const M=M_();
+  for(const r of due){
+    const ids=Object.keys(TITAN);
+    const tid=ids[Math.floor(Math.random()*ids.length)];
+    const base=r.side===0?M.A[0]:M.B[0];
+    const anchor={x:base[0],y:base[1]};
+    const probe={bw:TITAN[tid].bw||1,bh:TITAN[tid].bh||1};
+    const spot=freeSpot(anchor,r.side,probe);
+    if(!spot){say("","Нет места на спавне для титана — возрождение отложено.");
+      S.respawns.push({side:r.side,id:r.id,turn:S.turn+1});continue;}
+    const t=mkTitan(tid,r.side,spot);
+    // Spawned this turn — already spent so camera doesn't jump to spawn
+    t.moved=true;t.acted=true;
+    // Player-side titan: not a bot, but won't be autoSelected this turn (spent)
+    // Bot-side titan: bot flag set so AI handles it next turn
+    if(r.side!==viewSide())t.bot=true;
+    S.units.push(t);
+    say("g","На спавн стороны "+(r.side?"B":"A")+" возвращается "+TITAN[tid].n+" ("+t.hp+" HP) — "+nmc(spot)+"!");
+  }
+  render();
+}
+function callStrike(u,x,y){
+  if(S.orb[u.side]<=0)return;
+  S.strikes.push({x:x,y:y,side:u.side,turn:S.turn+1,type:(u.orb||cfg.orb)});
+  S.orb[u.side]--;u.acted=true;act=null;sel=null;
+  say("h","Наведение "+ORB[u.orb||cfg.orb].n+" на "+nmc({x:x,y:y})+
+      ". Удар в начале вашего следующего хода.");
+  render();
+}
+function resolveStrikes(){
+  const stay=[];
+  for(const st of S.strikes){
+    if(st.side!==S.side||st.turn>S.turn){stay.push(st);continue;}
+    const o=ORB[st.type];
+    say("h","Удар "+o.n+" по "+nmc(st)+"!");
+    if(st.type==="supply"){
+      let c=0;
+      for(const f of alive(st.side))if(cn(f,st)<=o.r){f.hp=Math.min(f.max,f.hp+5);f.rdy=0;c++;}
+      say("g","Снабжение: восстановлено роботов — "+c+".");
+    }else if(st.type==="emp"){
+      let c=0;
+      for(const e of alive())if(e.side!==st.side&&cn(e,st)<=o.r){e.cd=U(e).ab.cd;e.emp=2;c++;}
+      say("","EMP: под ударом роботов — "+c+". Щиты отключены на 2 хода.");
+    }else if(st.type==="smoke"){
+      for(let dx=-o.r;dx<=o.r;dx++)for(let dy=-o.r;dy<=o.r;dy++){
+        const x=st.x+dx,y=st.y+dy;
+        if(inside(x,y))S.smoke.push({x:x,y:y,until:S.turn+3});}
+      say("","Завеса поставлена на 3 хода.");
+    }else{
+      for(const e of alive().slice())if(e.side!==st.side&&cn(e,st)<=o.r)hurt(e,o.d,true);
+    }
+  }
+  S.strikes=stay;
+  check();
+}
+
+function updateCapBar(){
+  const M=M_(),goal=M.captureGoal||5;
+  const c=S.cap;
+  const pctA=c.holder===0?Math.round(c.ticks/goal*100):0;
+  const pctB=c.holder===1?Math.round(c.ticks/goal*100):0;
+  $("capFillA").style.width=pctA+"%";
+  $("capFillB").style.width=pctB+"%";
+  $("capLblA").textContent="A: "+(c.holder===0?c.ticks:0);
+  $("capLblB").textContent=(c.holder===1?c.ticks:0)+" :B";
+  $("capGoal").textContent="цель: "+goal+" ходов";
+}
+function tickCapture(){
+  const M=M_();
+  if(!M.captureGoal)return;
+  const zone=M.zone;
+  // who is in the zone?
+  const inZone=alive().filter(u=>{
+    for(const k of zone)if(kk(u.x,u.y)===k)return true;
+    if(u.big)for(let dx=0;dx<(u.bw||1);dx++)for(let dy=0;dy<(u.bh||1);dy++)
+      if(zone.has(kk(u.x+dx,u.y+dy)))return true;
+    return false;});
+  const sidesIn=new Set(inZone.map(u=>u.side));
+  const c=S.cap;
+  if(sidesIn.size===1){
+    const s=[...sidesIn][0];
+    if(c.holder===s){c.ticks++;}
+    else{c.holder=s;c.ticks=1;}
+    if(c.ticks>=M.captureGoal){
+      finish(s);return;}
+    say(s===0?"g":"h","Зона удерживается стороной "+(s?"B":"A")+" ("+c.ticks+"/"+M.captureGoal+").");
+  }else if(sidesIn.size===2){
+    say("","Зона оспаривается — захват остановлен.");
+  }else{
+    // nobody in zone
+    if(c.holder>=0)say("","Зона пуста — захват сброшен.");
+    c.holder=-1;c.ticks=0;
+  }
+  updateCapBar();
+  // update cell visual classes for zone
+  render();
+}
+function beginSide(){
+  $("pill").textContent="СТОРОНА "+(S.side?"B":"A");
+  $("pill").className="turnpill "+(S.side?"pb":"pa");
+  $("tn").textContent=S.turn;
+  S.domes=S.domes.filter(d=>d.until>=S.turn);
+  S.smoke=S.smoke.filter(c=>c.until>=S.turn);
+  S.turrets=S.turrets.filter(t=>t.until>=S.turn);
+  doTitanRespawns();
+  for(const tr of S.turrets){
+    if(tr.side!==S.side)continue;
+    for(const e of alive())
+      if(e.side!==tr.side&&cn(tr,e)<=2){hurt(e,1,false);
+        say("h","Турель бьёт "+U(e).n+" на 1.");break;}
+  }
+  resolveStrikes();
+  if(S.over)return;
+  tickCapture();
+  if(S.over)return;
+  for(const u of alive(S.side)){
+    u.moved=false;u.acted=false;
+    if(u.rdy>0)u.rdy--;
+    if(u.cd>0)u.cd--;
+    if(u.slow>0)u.slow--;
+    if(u.revealed>0)u.revealed--;
+    if(u.emp>0)u.emp--;
+    if(u.cd2>0)u.cd2--;
+    if(u.over>0)u.over--;
+    if(u.beam>0){
+      u.beam--;u.rdy=Math.max(u.rdy,1);
+      const tgt=S.units.find(z=>z.u===u.beamT&&z.hp>0);
+      if(!tgt){u.beam=0;u.fly=false;u.beamT=null;u.cd=U(u).ab.cd;say("",U(u).n+" теряет цель и снижается. Перезарядка: "+u.cd+".");}
+      else if(!fireLine(u,tgt)&&!u.fly)say("",U(u).n+": цель за стеной, луч сорван.");
+      else if(D(u,tgt)>4)say("",U(u).n+": цель вышла из радиуса луча (4 клетки).");
+      else{const bd=u.perk?5:3;hurt(tgt,bd,false,u);say("h","Hawk удерживает луч на "+U(tgt).n+": "+bd+" урона.");}
+      if(u.beam===0&&u.fly){u.fly=false;u.beamT=null;u.cd=U(u).ab.cd;say("",U(u).n+" приземляется.");}
+    }
+    if(u.regen>0){u.regen--;u.hp=Math.min(u.max,u.hp+2);
+      say("g",U(u).n+": регенерация +2 ("+u.hp+" HP)"+(u.regen===0?", цикл завершён.":", осталось ходов: "+u.regen));}
+    if(u.fortDmg>0)u.fortDmg--;
+    if(u.anchorT>0){u.anchorT--;
+      if(u.anchorT===0){
+        u.anchor=false;u.siege=false;
+        if(u.baseSh!==undefined){u.sh=u.baseSh;u.baseSh=undefined;}
+        say("",U(u).n+" снимается с якоря.");}}
+    if(u.siege&&!u.anchor)u.siege=false;
+    if(u.dot>0){u.dot--;hurt(u,1,true);}
+    if(u.rush>0){u.rush--;if(u.rush===0&&u.hp>0)boom(u);}
+    if(u.kShield>0){u.kShield--;
+      if(u.kShield===0){
+        if(u.barrier>0)say("",U(u).n+": физические щиты сняты.");
+        u.barrier=0;}}
+    if(u.frozen>0){u.frozen--;u.moved=true;
+      if(u.frozen===0)say("",U(u).n+" оттаял.");
+      else say("",U(u).n+" скован льдом — двигаться не может.");}
+    if(cfg.map==="foundry"&&u.hp>0){
+      for(const k of M_().zone){const p=k.split(",");
+        if(cn(u,{x:+p[0],y:+p[1]})<=1){hurt(u,2,true);break;}}}
+  }
+  act=null;
+  if(net.active){autoSelect();}
+  else if(myTurn())autoSelect();
+  else sel=null;
+  render();check();
+  if(S.over)return;
+  if(!net.active&&!myTurn())setTimeout(function(){
+    runBots(alive(S.side).filter(botUnit),switchSide);},400);
+}
+function autoSelect(){
+  if(net.active){
+    const myPeer=net.myPeerId;
+    if(myPeer){
+      // Keep selection if current sel is ours and not spent
+      if(sel&&sel.hp>0&&sel.side===net.mySide&&sel.owner===myPeer&&(!sel.moved&&!sel.acted))return;
+      // Pick first unspent unit we own
+      const mine=alive(net.mySide).filter(u=>u.owner===myPeer&&(!u.moved&&!u.acted));
+      if(mine.length){sel=mine[0];return;}
+      // Fallback: keep any alive unit we own for camera
+      const any=alive(net.mySide).filter(u=>u.owner===myPeer);
+      sel=any.length?any[0]:null;
+    } else {
+      if(sel&&sel.hp>0&&sel.side===net.mySide)return;
+      const mine=alive(net.mySide);
+      sel=mine.length?mine[0]:null;
+    }
+    return;
+  }
+  if(sel&&sel.hp>0&&sel.side===S.side&&!botUnit(sel)&&(!sel.moved&&!sel.acted))return;
+  const mine=alive(S.side).filter(u=>!botUnit(u)&&(!u.moved&&!u.acted));
+  sel=mine.length?mine[0]:(alive(S.side).filter(u=>!botUnit(u))[0]||null);
+}
+function noMovesLeft(){
+  if(net.active){
+    // Side turn over when ALL units on current side are spent
+    return !alive(S.side).some(u=>(!u.moved&&!u.acted));
+  }
+  return !alive(S.side).some(u=>!botUnit(u)&&(!u.moved&&!u.acted));
+}
+function afterAction(){
+  if(S.over){render();if(net.role==='host')net.broadcastSnapshot();return;}
+  if(net.active&&net.role==='host'){
+    // In net mode: switch side only when ALL units on current side are spent
+    if(noMovesLeft()){
+      render();
+      net.broadcastSnapshot();
+      setTimeout(function(){
+        if(!S.over){switchSide();net.broadcastSnapshot();}
+      },450);
+      return;
+    }
+    autoSelect();
+    render();
+    net.broadcastSnapshot();
+    return;
+  }
+  if(myTurn()&&noMovesLeft()){render();setTimeout(function(){if(!S.over)switchSide();},450);return;}
+  if(myTurn())autoSelect();
+  render();
+}
+function endTurn(){
+  if(S.over)return;
+  act=null;sel=null;
+  const pending=alive(S.side).filter(u=>botUnit(u)&&(!u.moved&&!u.acted));
+  if(pending.length){ runBots(pending,switchSide); return; }
+  switchSide();
+}
+function switchSide(){
+  if(S.over)return;
+  S.side=1-S.side;
+  if(S.side===S.first)S.turn++;
+  beginSide();
+  if(net.role==='host')net.broadcastSnapshot();
+}
+function check(){const a=alive(0).length,b=alive(1).length;
+  if(!a||!b)finish(a?0:1);}
+function finish(w){
+  S.over=true;
+  if($("tutbox"))$("tutbox").classList.remove("on");
+  const playerWon=(w===0);
+  $("oT").textContent=w===null?"Ничья":(playerWon?"Победа":"Поражение");
+  $("oS").textContent=w===null?"Достигнут предел в 60 ходов.":
+    (M_().captureGoal?(playerWon?"Зона удержана "+M_().captureGoal+" ходов — победа за "+S.turn+" ходов.":"Противник удержал зону."):(
+    cfg.mode==="pvp"?"Бой окончен на "+S.turn+" ходу.":
+     (playerWon?"Вы победили за "+S.turn+" ходов.":"Ваш робот уничтожен.")));
+  const again=$("again");
+  if(cfg.campaign){
+    const last=MISSIONS.length-1;
+    if(playerWon){
+      if(campState.mission>=last){
+        campState.done=true;
+        $("oT").textContent="Кампания пройдена!";
+        $("oS").textContent="Вы прошли все миссии. Открыто роботов: "+campState.robots.length+" из "+IDS.length+". Теперь вы готовы к настоящему бою.";
+        again.textContent="В меню";
+      }else{
+        grantReward();
+        campState.mission++;
+        $("oS").textContent+=(campState.reward&&campState.reward.text?(" Награда: "+campState.reward.text+"."):"");
+        again.textContent="В ангар →";
+      }
+    }else{
+      $("oS").textContent+=" Вернитесь в ангар — можно сменить робота и попробовать снова.";
+      again.textContent="В ангар →";
+    }
+  }else{
+    if($("again"))again.textContent="В меню";
+  }
+  $("over").classList.add("on");
+}
+
+function validCells(){
+  const out=new Set();
+  if(!sel||!act)return out;
+  if(act==="move"){for(const k of reach(sel).keys())out.add(k);}
+  else if(act==="fire"){
+    for(const e of alive())if(e.side!==sel.side&&canSee(sel,e))out.add(kk(e.x,e.y));}
+  else if(act==="orb"){
+    for(let x=0;x<M_().w;x++)for(let y=0;y<M_().h;y++)out.add(kk(x,y));
+    return out;
+  }
+  else if(act==="abil"){
+    const a=U(sel).ab;
+    if(a.t!=="cell")return out;
+    if(sel.id==="baglior"&&sel.mark){out.add(kk(sel.mark.x,sel.mark.y));return out;}
+    // Flying Hawk: aim beam at enemies within radius 4
+    if(sel.id==="feng"&&sel.fly){
+      for(const e of alive())if(e.side!==sel.side&&e.hp>0&&D(sel,e)<=4)out.add(kk(e.x,e.y));
+      return out;
+    }
+    for(let x=0;x<M_().w;x++)for(let y=0;y<M_().h;y++){
+      if(D(sel,{x:x,y:y})>a.rad)continue;
+      if(a.enemyOnly){
+        const t=unitAt(x,y);
+        if(!t||t.side===sel.side||t.hp<=0||!canSee(sel,t))continue;
+        out.add(kk(x,y));continue;
+      }
+      if(sel.big){ if(!fits(sel,x,y))continue; }
+      else if(blocked(x,y))continue;
+      if(a.thru&&occ(x,y,sel))continue;
+      out.add(kk(x,y));}
+  }
+  return out;
+}
+function viewBox(){
+  const M=M_(),V=10;
+  const vs=viewSide();
+  let cx,cy;
+  if(sel&&sel.hp>0){cx=sel.x;cy=sel.y;}
+  else{
+    const mine=alive(vs);
+    if(mine.length){cx=Math.round(mine.reduce((a,u)=>a+u.x,0)/mine.length);
+                    cy=Math.round(mine.reduce((a,u)=>a+u.y,0)/mine.length);}
+    else{cx=Math.floor(M.w/2);cy=Math.floor(M.h/2);}
+  }
+  const w=Math.min(V,M.w),h=Math.min(V,M.h);
+  let x0=Math.round(cx-w/2+0.5),y0=Math.round(cy-h/2+0.5);
+  x0=Math.max(0,Math.min(M.w-w,x0));
+  y0=Math.max(0,Math.min(M.h-h,y0));
+  return{x0:x0,y0:y0,w:w,h:h};
+}
+function onSeg(a,b,x,y){
+  if((x===a.x&&y===a.y)||(x===b.x&&y===b.y))return false;
+  const n=Math.max(Math.abs(b.x-a.x),Math.abs(b.y-a.y));
+  for(let i=1;i<n;i++){
+    if(Math.round(a.x+(b.x-a.x)*i/n)===x&&Math.round(a.y+(b.y-a.y)*i/n)===y)return true;}
+  return false;
+}
+function litCell(x,y){
+  const vs=viewSide(),r=detectRange();
+  return alive(vs).some(f=>D(f,{x:x,y:y})<=r);
+}
+function focusUnit(){
+  const vs=viewSide();
+  if(sel&&sel.hp>0&&sel.side===vs)return sel;
+  // In net mode always show own units even when not our turn
+  const own=alive(vs).filter(u=>!botUnit(u));
+  if(own.length)return own[0];
+  const any=alive(vs);
+  return any.length?any[0]:null;
+}
+function camWindow(){
+  const M=M_(),R=14;
+  const f=focusUnit();
+  const cx=f?f.x:Math.floor(M.w/2), cy=f?f.y:Math.floor(M.h/2);
+  const w=Math.min(R,M.w), h=Math.min(R,M.h);
+  let x0=cx-Math.floor(w/2), y0=cy-Math.floor(h/2);
+  x0=Math.max(0,Math.min(M.w-w,x0));
+  y0=Math.max(0,Math.min(M.h-h,y0));
+  return{x0:x0,y0:y0,w:w,h:h};
+}
+function render(){
+  // Re-sync sel to current S.units (prevents stale references after snapshots)
+  if(sel&&S)sel=S.units.find(u=>u.u===sel.u&&u.hp>0)||sel;
+  const M=M_(),b=$("board");
+  const cam=camWindow();
+  b.style.width="100%";
+  b.style.gridTemplateColumns="repeat("+cam.w+",1fr)";
+  b.style.aspectRatio=cam.w+"/"+cam.h;
+  b.innerHTML="";
+  const valid=validCells(),mineList=S.mines[S.side]||[];
+  const interactive=myTurn();
+  for(let y=cam.y0;y<cam.y0+cam.h;y++)for(let x=cam.x0;x<cam.x0+cam.w;x++){
+    const c=document.createElement("div"),k=kk(x,y);
+    c.className="cell";
+    const lit=litCell(x,y);
+    if(!lit)c.classList.add("fog");
+    if(M.obs.has(k))c.classList.add("obs");
+    if(M.tree.has(k))c.classList.add("tree");
+    if(M.zone.has(k)){
+      c.classList.add("zone");
+      const cap=S.cap;
+      if(cap.holder===0&&cap.ticks>0)c.classList.add("cap-a");
+      else if(cap.holder===1&&cap.ticks>0)c.classList.add("cap-b");
+    }
+    if(lit){
+      if(S.domes.some(d=>cn(d,{x:x,y:y})<=2))c.classList.add("dome");
+      if(mineList.some(m=>m.x===x&&m.y===y))c.classList.add("mine");
+      const tr=S.turrets.find(t=>t.x===x&&t.y===y);
+      if(tr)c.classList.add(tr.side===0?"turretA":"turretB");
+      if(S.wrecks.some(w=>w.x===x&&w.y===y))c.classList.add("wreck");
+      if(S.smoke.some(q=>q.x===x&&q.y===y))c.classList.add("smoke");
+      if(S.strikes.some(t=>t.side===S.side&&cn(t,{x:x,y:y})<=ORB[t.type].r))c.classList.add("strike");
+      if(sel&&sel.mark&&sel.mark.x===x&&sel.mark.y===y)c.classList.add("mark");
+      if(sel&&(act==="fire"||act==="abil")){
+        const gold=sel.ultW||sel.ultR, hawk=sel.id==="feng";
+        for(const e of alive()){
+          if(e.side===sel.side||e.hp<=0)continue;
+          if(!valid.has(e.x+","+e.y))continue;
+          if(onSeg(sel,e,x,y)){
+            c.classList.add(hawk?(gold?"beamGold":"beamBlue"):"aimline");
+          }
+        }
+      }
+      for(const fu of alive()){
+        if(fu.beam>0&&fu.beamT&&concealed(fu,viewSide())===false){
+          const bt=S.units.find(z=>z.u===fu.beamT&&z.hp>0);
+          if(bt){
+            const cls=fu.ultW||fu.ultR?"beamGold":"beamBlue";
+            if(onSeg(fu,bt,x,y))c.classList.add(cls);
+            if(bt.x===x&&bt.y===y)c.classList.add(fu.ultW||fu.ultR?"beamHitGold":"beamHitBlue");
+          }
+        }
+      }
+    }
+    const u=lit?unitAt(x,y):null;
+    const head=u&&u.x===x&&u.y===y;
+    const hidden=u&&concealed(u,viewSide());
+    if(act==="orb"&&interactive&&sel){
+      c.classList.add("can","can-orb");
+      c.onclick=(function(cx,cy){return function(){callStrike(sel,cx,cy);};})(x,y);
+    }
+    else if(valid.has(k)&&interactive){
+      c.classList.add("can","can-"+(act==="move"?"move":act==="fire"?"fire":act==="orb"?"orb":"abil"));
+      c.onclick=(function(cx,cy,tgt){return function(){
+        if(act==="orb"){launch(sel,cx,cy);afterAction();return;}
+        if(act==="move"){move(sel,cx,cy);afterAction();}
+        else if(act==="fire"&&tgt){fire(sel,tgt);act=null;sel=null;afterAction();}
+        else{
+          if(sel.id==="baglior"&&sel.mark)teleport(sel);
+          else cellAbility(sel,cx,cy);
+          afterAction();}
+      };})(x,y,u);
+    }
+    if(u&&!hidden){
+      const t=document.createElement("div");
+      t.className="tok "+(u.side?"b":"a")+(u===sel?" sel":"")+
+        ((u.moved||u.acted)?" spent":"")+(u.hidden?" hid":"")+(u.big?" big":"")+
+        ((u.ultR||u.ultW)?" ultglow":"")+(u.frozen>0?" frozen":"");
+      t.innerHTML=head?mechSvg(u,u.titan?95:70):"";
+      if(head&&u.nick&&net.active){
+        const nl=document.createElement("span");nl.className="nick-over-tok";
+        nl.textContent=u.nick;t.style.position="relative";t.appendChild(nl);
+      }
+      t.title=U(u).n+" · "+u.hp+"/"+u.max+" HP";
+      if(u.beam>0)t.classList.add("flying");
+      if(head||!u.big){
+        const hb=document.createElement("div");hb.className="hpb";
+        const hi=document.createElement("i");hi.style.width=Math.max(0,100*u.hp/u.max)+"%";
+        hb.appendChild(hi);t.appendChild(hb);}
+      if(u.side===S.side&&!botUnit(u)&&(head||!u.big)){
+        const p=document.createElement("div");p.className="pips";
+        p.innerHTML='<i class="'+(u.moved?"off":"")+'"></i><i class="'+(u.acted?"off":"")+'"></i>';
+        t.appendChild(p);
+      }
+      if(u.side===S.side&&interactive&&!botUnit(u)){
+        // In net mode: can only select own unit
+        const canSelect=!net.active||!net.myPeerId||(u.owner===net.myPeerId);
+        if(canSelect){
+          t.onclick=(function(unit){return function(e){e.stopPropagation();
+            sel=unit;act=null;render();};})(u);
+        }
+      }
+      c.appendChild(t);
+    }
+    b.appendChild(c);
+  }
+  const ot=$("orbtag");
+  if(S.orb[S.side]>0){ot.style.display="";
+    ot.textContent="ОРБИТАЛКА ×"+S.orb[S.side]+(sel&&sel.orb?" · "+ORB[sel.orb].n:"");}
+  else ot.style.display="none";
+  drawHint();drawInfo();drawRoster();drawLegend();
+}
+
+function drawLegend(){
+  const M=M_(),h=$("legend");
+  const items=[["var(--cell)","свободная клетка"]];
+  if(M.obs.size)items.push(["var(--obs)","препятствие — не пройти, не простреливается насквозь"]);
+  if(M.breach&&M.breach.size)items.push(["#252D37","пролом — пройти можно, даёт укрытие"]);
+  if(M.tree.size)items.push(["var(--tree)","дерево — можно зайти, внутри вас не видят"]);
+  if(M.chasm.size)items.push(["var(--chasm)","разлом — не пройти, но стрельбе не мешает"]);
+  if(M.zone.size)items.push(["#1A2430",cfg.map==="capture"?"зона захвата — удержи 5 ходов подряд":(cfg.map==="foundry"?"печь — 2 урона в конце хода рядом":"ключевая точка")]);
+  if(S.wrecks.length)items.push(["#6E5E92","обломки — подойти вплотную и забрать за ход"]);
+  if(S.turrets.length)items.push(["var(--ally)","турель Керли — бьёт врагов в радиусе 2 на 1"]);
+  if(S.smoke.length)items.push(["#4A3A66","дымовая завеса — сквозь неё не видно"]);
+  if(S.strikes.length)items.push(["#2B0F0F","зона орбитального удара — уходите!"]);
+  if(S.wrecks.length)items.push(["#8A95A5","обломки — подберите, чтобы зарядить орбиталку"]);
+  if(S.smoke.length)items.push(["#4A3A66","дымовая завеса — сквозь неё не видно"]);
+  if(S.wrecks.length)items.push(["#C8A24A","обломки — подберите, чтобы зарядить орбиталку"]);
+  if(S.smoke.length)items.push(["#3A2A5C","дымовая завеса — сквозь неё не видно"]);
+  items.push(["#14283A","куда можно пойти"]);
+  items.push(["#2A2410","цель способности"]);
+  if(S.wrecks.length)items.push(["#8A95A5","обломки — встаньте рядом и потратьте ход, чтобы забрать"]);
+  if(S.smoke.length)items.push(["#4A3A66","дымовая завеса — сквозь неё не видно"]);
+  if(S.strikes.length)items.push(["#D4AF37","зона орбитального удара — успейте уйти"]);
+  items.push(["var(--warn)","обломки — подберите, чтобы зарядить орбиталку"]);
+  h.innerHTML=items.map(function(a){
+    return '<span><i style="background:'+a[0]+'"></i>'+a[1]+'</span>';}).join("");
+}
+function drawHint(){
+  const h=$("hint");
+  if(!act||!sel){h.className="hintbar";return;}
+  const T={orb:["Орбитальный удар","выберите любую клетку — удар придёт в начале следующего хода","hintbar on fire"],
+           move:["Перемещение","нажмите на синюю клетку","hintbar on"],
+           fire:["Огонь","цель по прямой или диагонали без стены — в оранжевой рамке","hintbar on fire"],
+           abil:["Способность","нажмите на жёлтую клетку","hintbar on abil"],
+           orb:["Орбитальный удар","выберите любую клетку карты — удар придёт в начале следующего хода","hintbar on abil"]}[act];
+  h.className=T[2];$("hintT").textContent=T[0];
+  $("hintS").textContent=(act==="abil"&&sel.id==="verdict")?("осталось мин: "+sel.minesLeft):T[1];
+}
+function drawInfo(){
+  const h=$("info");
+  if(!sel||sel.hp<=0){
+    h.innerHTML='<p style="color:var(--faint);font-size:13px;margin:0;">Нажмите на своего робота — синюю фишку на поле.</p>';
+    return;}
+  const b=U(sel),w=W(sel);
+  const mine=sel.side===S.side&&myTurn()&&!botUnit(sel);
+  const hasTarget=alive().some(e=>e.side!==sel.side&&canSee(sel,e));
+  const spd=b.sp+(sel.rush>0?2:0)-(sel.slow>0?1:0);
+  h.innerHTML=
+   '<div class="rname">'+b.n+'</div><div class="rcls">'+b.c+' · '+nmc(sel)+'</div>'+
+   '<div class="grid2">'+
+    '<div><span class="k">Прочность</span><span class="v">'+Math.max(0,sel.hp)+'/'+sel.max+'</span></div>'+
+    '<div><span class="k">Щит</span><span class="v">'+(sel.sh||"—")+'</span></div>'+
+    '<div><span class="k">Скорость</span><span class="v">'+spd+'</span></div>'+
+    '<div><span class="k">Дальность</span><span class="v">'+w.r+(w.min?"/"+w.min:"")+'</span></div>'+
+   '</div>'+
+   '<div class="wpn"><b>'+w.n+'</b><br>урон '+w.d+' · дальность '+w.r+(w.min?' (мин '+w.min+')':'')+' · перезарядка '+w.rl+
+     (sel.rdy>0?' · заряжается ('+sel.rdy+')':' · готово')+'<br><span style="color:var(--faint)">◆ '+trait(w)+'</span></div>'+
+   (sel.beam>0?'<div class="wpn" style="border-color:#D4AF37;color:#D4AF37;">В воздухе: луч держится ещё '+sel.beam+' ход(а). Пушки отключены.</div>':'')+
+   (sel.barrier>0?'<div class="wpn" style="border-color:var(--ally);color:var(--ally);">Физические щиты: '+sel.barrier+' (ходов осталось: '+sel.kShield+')</div>':'')+
+   (sel.frozen>0?'<div class="wpn" style="border-color:#7FD8F5;color:#7FD8F5;">Скован льдом — не может двигаться этот ход</div>':
+     (sel.frost>0?'<div class="wpn" style="border-color:#7FD8F5;color:#7FD8F5;">Обледенение '+sel.frost+'/3</div>':''))+
+   '<div class="acts" id="acts"></div>';
+  const A=$("acts");
+  function add(cls,ico,name,note,dis,fn,on){
+    const el=document.createElement("button");
+    el.className="act "+cls+(on?" on":"");el.disabled=!!dis;
+    el.innerHTML='<span class="ico">'+ico+'</span><span class="lbl"><b>'+name+
+      '</b><small>'+note+'</small></span>';
+    el.onclick=fn;A.appendChild(el);
+  }
+  add("m","▸","Ходить",sel.frozen>0?"скован льдом":(sel.moved?"уже перемещался":"до "+spd+" клеток"),
+    !mine||sel.moved||sel.frozen>0,function(){act=act==="move"?null:"move";render();},act==="move");
+  add("f","✳","Стрелять",
+    sel.acted?"действие потрачено":(sel.rdy>0?"перезарядка "+sel.rdy:(hasTarget?"урон "+w.d:"нет целей в зоне")),
+    !mine||sel.acted||sel.rdy>0||!hasTarget,
+    function(){act=act==="fire"?null:"fire";render();},act==="fire");
+  const ab=b.ab,tel=(sel.id==="baglior"&&sel.mark);
+
+  // Hawk: two separate buttons — takeoff and aim beam
+  if(sel.id==="feng"){
+    if(!sel.fly){
+      // Not flying: show Takeoff button
+      add("k","◈","Взлёт",
+        sel.cd>0?"откат "+sel.cd:(sel.acted?"действие потрачено":ab.d),
+        !mine||sel.cd>0||sel.acted,
+        function(){
+          sel.fly=true;sel.beam=sel.perk?5:3;sel.beamT=null;
+          sel.cd=ab.cd;sel.acted=true;
+          say("","Hawk взлетает. Выберите цель для луча кнопкой «Навестись».");
+          act=null;afterAction();
+        },false);
+    } else {
+      // Flying: show Aim beam button
+      const beamDmg=sel.perk?5:3;
+      add("k","⊛","Навестись",
+        sel.beam>0?"луч активен "+sel.beam+" ходов · "+beamDmg+" урона/ход":"луч погас",
+        !mine||!sel.beam,
+        function(){act=act==="abil"?null:"abil";render();},
+        act==="abil");
+    }
+  } else {
+    add("k","◈",tel?"Телепорт к метке":ab.n,
+      sel.cd>0?("откат "+sel.cd):(sel.acted&&!tel?"действие потрачено":ab.d),
+      !mine||sel.cd>0||(sel.acted&&!tel),
+      function(){
+        if(ab.t==="self"){selfAbility(sel);act=null;sel=null;afterAction();}
+        else{if(sel.id==="verdict"&&sel.minesLeft<=0)sel.minesLeft=3;
+          act=act==="abil"?null:"abil";render();}},
+      act==="abil");
+  }
+  if(sel.titan){
+    const tb=TITAN[sel.tid];
+    add("k","◈",tb.ab2.n,sel.cd2>0?("откат "+sel.cd2):tb.ab2.d,
+      !mine||sel.cd2>0||sel.acted,function(){titanAbility(sel,2);act=null;sel=null;afterAction();},false);
+  }
+  if(wreckNear(sel))
+    add("k","⛏","Забрать обломки",
+      (sel.moved||sel.acted)?"нужен целый ход без движения":"заряжает орбиталку",
+      !mine||sel.moved||sel.acted,function(){collect(sel);afterAction();},false);
+  if(S.orb[sel.side]>0)
+    add("f","◎","Орбиталка: "+ORB[sel.orb||cfg.orb].n,
+      sel.acted?"действие потрачено":ORB[cfg.orb].note,
+      !mine||sel.acted,function(){act=act==="orb"?null:"orb";render();},act==="orb");
+  if(sel.id==="tirkin"&&sel.rush>0&&mine)
+    add("f","✸","Подорвать сейчас","8 урона в радиусе 1",false,
+      function(){boom(sel);render();},false);
+}
+function drawRoster(){
+  const h=$("rl");h.innerHTML="";
+  for(const u of S.units){
+    const d=document.createElement("div");
+    d.className="rr"+(u.hp<=0?" dead":"");
+    const hid=concealed(u,viewSide());
+    d.innerHTML='<span class="d" style="color:'+(u.side?"var(--enemy)":"var(--ally)")+'">'+uico(u,13)+'</span>'+
+      '<span class="n">'+U(u).n+(u.bot?" (бот)":"")+(hid?" — не виден":"")+'</span>'+
+      '<span class="h">'+Math.max(0,u.hp)+'</span>';
+    if(u.hp>0&&u.side===S.side&&myTurn()&&!botUnit(u))
+      d.onclick=(function(unit){return function(){sel=unit;act=null;render();};})(u);
+    h.appendChild(d);
+  }
+}
+
+function runBots(list,done){
+  if(S.over)return;
+  let i=0;
+  function step(){
+    if(S.over)return;
+    const foes=alive(1-S.side);
+    if(!foes.length){check();return;}
+    if(i>=list.length){setTimeout(function(){if(!S.over)done();},260);return;}
+    const u=list[i++];
+    if(u.hp<=0){step();return;}
+    const near=foes.slice().sort((a,b)=>cn(u,a)-cn(u,b))[0];
+    const d=cn(u,near),w=W(u),ab=U(u).ab;
+    // обломки рядом — подобрать, если врагов не видно
+    if(!u.moved&&!u.acted&&wreckNear(u)&&!foes.some(f=>canSee(u,f))){
+      collect(u);render();setTimeout(step,300);return;}
+    // есть заряд — ударить по скоплению врагов
+    if(S.orb[u.side]>0&&!u.acted){
+      let bx=near.x,by=near.y,best=-1;const rad=ORB[cfg.orb].r;
+      for(const e of foes){
+        let c=0;for(const g of foes)if(cn(g,e)<=rad)c++;
+        if(c>best){best=c;bx=e.x;by=e.y;}}
+      if(best>=2){callStrike(u,bx,by);render();setTimeout(step,300);return;}
+    }
+    if(u.cd===0&&!u.acted){
+      if(u.titan){ if(u.cd===0&&U(u).ab.t==="self")titanAbility(u,1);
+        else if(u.cd2===0)titanAbility(u,2); }
+      const want={tirkin:d>4,raiken:u.hp<u.max*.75,crisis:d>6,athier:d<8,baglior:true,
+        obelisk:d<=w.r,verdict:true,feng:foes.some(f=>canSee(u,f)&&cn(u,f)<=ab.rad),
+        kerli:d<=6,grom:d>=(w.min||0)}[u.id];
+      if(want){
+        if(ab.t==="self")selfAbility(u);
+        else if(u.id==="feng"){
+          let target=null,bd=1e9;
+          for(const f of foes)if(f.hp>0&&canSee(u,f)&&cn(u,f)<=ab.rad&&cn(u,f)<bd){bd=cn(u,f);target=f;}
+          if(target){u.fly=true;u.beam=3;u.beamT=target.u;hurt(target,3,false,u);
+            u.cd=ab.cd;u.acted=true;u.moved=true;
+            say("h","Hawk наводит луч на "+U(target).n+".");}}
+        else if(u.id==="kerli"){
+          u.barrier=4;u.kShield=2;
+          const d0=near?{x:Math.sign(near.x-u.x),y:Math.sign(near.y-u.y)}:{x:0,y:1};
+          const spots=(d0.x&&d0.y)?[{x:u.x,y:u.y+d0.y},{x:u.x+d0.x,y:u.y}]
+            :(d0.x?[{x:u.x+d0.x,y:u.y-1},{x:u.x+d0.x,y:u.y+1}]
+                  :[{x:u.x-1,y:u.y+(d0.y||1)},{x:u.x+1,y:u.y+(d0.y||1)}]);
+          for(const sp of spots)
+            if(inside(sp.x,sp.y)&&!blocked(sp.x,sp.y)&&!occ(sp.x,sp.y))
+              S.turrets.push({x:sp.x,y:sp.y,side:u.side,until:S.turn+2});
+          u.cd=ab.cd;u.acted=true;say("g","Керли поднимает бастион.");}
+        else if(u.id==="baglior"){
+          if(u.mark&&u.hp<u.max*.5)teleport(u);
+          else if(!u.mark){
+            let bx=u.x,by=u.y,bs=-1;
+            for(let dx=-5;dx<=5;dx++)for(let dy=-5;dy<=5;dy++){
+              const nx=u.x+dx,ny=u.y+dy;
+              if(!inside(nx,ny)||blocked(nx,ny))continue;
+              let mn=99;for(const f of foes)mn=Math.min(mn,cn({x:nx,y:ny},f));
+              if(mn>bs){bs=mn;bx=nx;by=ny;}}
+            u.mark={x:bx,y:by};u.acted=true;say("","Баглиор ставит метку.");}}
+        else if(u.id==="verdict"){
+          let c=0;
+          for(let dx=-3;dx<=3&&c<3;dx++)for(let dy=-3;dy<=3&&c<3;dy++){
+            const nx=u.x+dx,ny=u.y+dy;
+            if(inside(nx,ny)&&!blocked(nx,ny)){S.mines[1-u.side].push({x:nx,y:ny});c++;}}
+          u.cd=ab.cd;u.acted=true;say("","Вердикт ставит мины.");}
+      }
+    }
+    let vis=foes.filter(f=>f.hp>0&&canSee(u,f));
+    if(!vis.length&&!u.moved&&!u.acted){
+      const rc=reach(u);let best=null,bd=1e9;
+      let goal=near;
+      for(const wk of S.wrecks) if(cn(u,wk)<cn(u,goal)+3){goal=wk;break;}
+      for(const k of rc.keys()){const p=k.split(","),x=+p[0],y=+p[1];
+        const dist=cn({x:x,y:y},goal);
+        const sc=(goal!==near)?dist:(dist>w.r?dist:(w.min&&dist<w.min?w.min-dist+9:0));
+        if(sc<bd){bd=sc;best={x:x,y:y};}}
+      if(best)move(u,best.x,best.y);
+      // After moving, don't fire this turn (1-action rule)
+      render();setTimeout(step,300);return;
+    }
+    if(vis.length&&u.rdy===0&&!u.acted&&!u.moved)
+      fire(u,vis.slice().sort((a,b)=>a.hp-b.hp)[0]);
+    render();
+    setTimeout(step,300);
+  }
+  step();
+}
+
+// ═══════════════════════════════════════════════════════
+// СЕТЕВОЙ СЛОЙ — PeerJS мультиплеер
+// ═══════════════════════════════════════════════════════
+const PEER_CFG={
+  host:'0.peerjs.com',port:443,secure:true,path:'/',
+  config:{
+    iceServers:[
+      {urls:'stun:stun.l.google.com:19302'},
+      {urls:'stun:stun1.l.google.com:19302'},
+      {urls:'stun:stun2.l.google.com:19302'},
+      {urls:'stun:global.stun.twilio.com:3478'}
+    ]
+  }
+};
+
+const net={
+  peer:null, conn:null,
+  role:null,       // 'host' | 'guest'
+  mySide:-1,       // 0 = синие, 1 = оранжевые
+  nick:'',
+  lobbySettings:{map:'plains',bannedRobots:new Set(),bannedWeapons:new Set()},
+  guests:{},       // conn.peer → {nick, side, robotId, wid, ready}
+  active:false,
+
+  // ── HELPERS ────────────────────────────────────────────
+  send(data){
+    if(net.conn&&net.conn.open)net.conn.send(data);
+    // host → broadcast to all guests
+    else if(net.role==='host')
+      Object.values(net.guests).forEach(g=>{if(g.conn&&g.conn.open)g.conn.send(data);});
+  },
+  setStatus(id,msg,cls){
+    const el=$(id);if(!el)return;
+    el.textContent=msg;el.className='net-status'+(cls?' '+cls:'');
+  },
+
+  // ── INIT PEER ──────────────────────────────────────────
+  initPeer(onOpen){
+    if(typeof Peer==='undefined'){
+      net.setStatus('hostStatus','Ошибка: библиотека PeerJS не загрузилась. Проверьте интернет и обновите страницу.','err');
+      net.setStatus('guestStatus','Ошибка: библиотека PeerJS не загрузилась. Проверьте интернет и обновите страницу.','err');
+      return;
+    }
+    if(net.peer&&!net.peer.destroyed){net.peer.destroy();}
+    net.peer=new Peer(PEER_CFG);
+    net.peer.on('open',id=>{onOpen(id);});
+    net.peer.on('error',e=>{
+      net.setStatus('hostStatus','Ошибка: '+e.message,'err');
+      net.setStatus('guestStatus','Ошибка: '+e.message,'err');
+    });
+  },
+
+  // ── SERIALIZE / DESERIALIZE S ─────────────────────────
+  // Sets can't JSON-encode; convert to arrays and back
+  serializeS(s){
+    const m=s.map;
+    return {
+      ...s,
+      map:{...m,
+        obs:[...m.obs],tree:[...m.tree],chasm:[...m.chasm],zone:[...m.zone],
+        A:m.A,B:m.B,
+      },
+      mines:{0:[...s.mines[0]],1:[...s.mines[1]]},
+    };
+  },
+  deserializeS(raw){
+    const m=raw.map;
+    raw.map={...m,
+      obs:new Set(m.obs),tree:new Set(m.tree),chasm:new Set(m.chasm),zone:new Set(m.zone),
+    };
+    raw.mines={0:raw.mines[0],1:raw.mines[1]};
+    return raw;
+  },
+
+  // ── MESSAGE HANDLER ────────────────────────────────────
+  onMessage(msg, fromConn){
+    if(msg.type==='hello'){
+      const pid=fromConn.peer;
+      if(!net.guests[pid])net.guests[pid]={conn:fromConn};
+      Object.assign(net.guests[pid],msg.payload);
+      net.guests[pid].conn=fromConn;
+      netUpdateHostLobby();
+    }
+    else if(msg.type==='lobbyInfo'){
+      const s=msg.settings;
+      net.setStatus('guestStatus','Подключено к лобби!','ok');
+      renderGuestRobotPicker(s.bannedRobots||[],s.bannedUlts||[]);
+      net.guestBans={bannedWeapons:s.bannedWeapons||[],bannedUltWeapons:s.bannedUltWeapons||[],bannedUlts:s.bannedUlts||[]};
+    }
+    else if(msg.type==='start'){
+      S=net.deserializeS(msg.S);
+      cfg=msg.cfg;
+      net.mySide=msg.mySide;
+      // Use our own peer ID (reliable) rather than what host sends
+      net.myPeerId=net.peer.id;
+      net.active=true;
+      netStartBattle();
+    }
+    else if(msg.type==='action'){
+      if(net.role==='host'){
+        const senderPeer=fromConn.peer;
+        const u=S.units.find(x=>x.u===msg.uid);
+        // Validate: unit must exist, belong to sender, and it must be their side's turn
+        if(!u||u.owner!==senderPeer||u.side!==S.side){
+          net.broadcastSnapshot(); // send correct state back
+          return;
+        }
+        netApplyAction(msg);
+        net.broadcastSnapshot();
+      }
+    }
+    else if(msg.type==='skip'){
+      if(net.role==='host'){
+        const senderPeer=fromConn.peer;
+        // Validate sender is on current side
+        const senderUnit=S.units.find(u=>u.owner===senderPeer);
+        if(!senderUnit||senderUnit.side!==S.side){net.broadcastSnapshot();return;}
+        alive(S.side).filter(u=>u.owner===senderPeer).forEach(u=>{u.moved=true;u.acted=true;});
+        afterAction();
+        net.broadcastSnapshot();
+      }
+    }
+    else if(msg.type==='endturn'){
+      if(net.role==='host'){
+        const senderPeer=fromConn.peer;
+        const senderUnit=S.units.find(u=>u.owner===senderPeer);
+        if(!senderUnit||senderUnit.side!==S.side){net.broadcastSnapshot();return;}
+        alive(S.side).filter(u=>u.owner===senderPeer).forEach(u=>{u.moved=true;u.acted=true;});
+        afterAction();
+        net.broadcastSnapshot();
+      }
+    }
+    else if(msg.type==='snapshot'){
+      // GUEST receives state from host
+      const prevSelUid=sel?sel.u:null;
+      S=net.deserializeS(msg.S);
+      act=null;
+      // Re-find sel in new S.units to avoid stale object reference
+      if(prevSelUid)sel=S.units.find(u=>u.u===prevSelUid)||null;
+      autoSelect();
+      // Update turn tag
+      const isMyTeamTurn=S.side===net.mySide;
+      $("mtag").textContent="МУЛЬТИПЛЕЕР · "+(isMyTeamTurn?"ВАШ ХОД":"Ход противника");
+      render();
+      if(S.over)_netOrigFinish(S.winner);
+    }
+    else if(msg.type==='finish'){
+      S.over=true;S.winner=msg.winner;
+      finish(msg.winner);
+    }
+  },
+
+  // ── SEND ──────────────────────────────────────────────
+  sendAction(msg){net.send(msg);},
+  broadcastSnapshot(){
+    if(net.role!=='host')return;
+    const snap={type:'snapshot',S:net.serializeS(S)};
+    Object.values(net.guests).forEach(g=>{if(g.conn&&g.conn.open)g.conn.send(snap);});
+  },
+
+  // ── CLEANUP ───────────────────────────────────────────
+  reset(){
+    if(net.peer&&!net.peer.destroyed)net.peer.destroy();
+    net.peer=null;net.conn=null;net.role=null;net.mySide=-1;
+    net.guests={};net.active=false;net.nick='';net.guestBans=null;
+    $("netLobby").style.display="none";
+  }
+};
+
+// ── APPLY REMOTE ACTION (HOST ONLY) ───────────────────
+function netApplyAction(msg){
+  const u=S.units.find(x=>x.u===msg.uid);
+  if(!u)return;
+  // Temporarily unlock so originals run without net intercept
+  if(msg.action==='move')_origMove(u,msg.x,msg.y);
+  else if(msg.action==='fire'){const t=S.units.find(x=>x.u===msg.tid);if(t)_origFire(u,t);}
+  else if(msg.action==='orb')_origCallStrike(u,msg.x,msg.y);
+  else if(msg.action==='selfAbility')_origSelfAbility(u);
+  else if(msg.action==='cellAbility')_origCellAbility(u,msg.x,msg.y);
+  else if(msg.action==='teleport')_origTeleport(u);
+  else if(msg.action==='titanAbility')_origTitanAbility(u,msg.slot);
+  // afterAction handles noMovesLeft → auto switchSide on host
+  afterAction();
+}
+
+// Wrap action senders so they auto-broadcast in net mode
+function netWrapActions(){
+  // intercept clicks via a proxy – we patch afterAction and endTurn
+  // actual net sends are called from the click handlers directly (see netInstallClickProxy)
+}
+
+// ── NET OVERRIDES for myTurn / viewSide / finish ──────
+// Patch original functions in-place after net.active is set
+// (we can't redeclare function declarations, so we store originals and wrap)
+const _netOrigMyTurn=myTurn;
+const _netOrigViewSide=viewSide;
+const _netOrigFinish=finish;
+function netPatchGlobals(){
+  window.myTurn=function(){
+    if(!net.active)return !alive(S.side).every(botUnit);
+    if(S.side!==net.mySide)return false;
+    const myPeer=net.myPeerId;
+    if(!myPeer)return true;
+    // It's my turn if I have units on this side that haven't acted yet
+    return alive(S.side).some(u=>u.owner===myPeer&&(!u.moved&&!u.acted));
+  };
+  window.viewSide=function(){
+    if(net.active)return net.mySide;
+    return cfg.mode==="pvp"?S.side:0;
+  };
+  window.finish=function(w){
+    if(S&&S.over)return;
+    S.over=true;S.winner=w;
+    if(net.active)net.send({type:'finish',winner:w});
+    _netOrigFinish(w);
+  };
+}
+
+// ── START NET BATTLE (both sides) ─────────────────────
+function netStartBattle(){
+  netPatchGlobals();
+  netInstallClickProxy();   // patch BEFORE beginSide so render uses correct myTurn
+  $("modeSelect").style.display="none";
+  $("netHost").style.display="none";
+  $("netLobby").style.display="none";
+  $("netGuest").style.display="none";
+  $("menu").style.display="none";
+  $("game").style.display="block";
+  $("skip").style.display=net.active?"":"none";
+  $("mtag").textContent="МУЛЬТИПЛЕЕР · "+(net.mySide===0?"СТОРОНА A":"СТОРОНА B");
+  $("rainFX").style.display=S.weather==="storm"?"block":"none";
+  const isCapture=!!(M_().captureGoal);
+  $("capBar").classList.toggle("on",isCapture);
+  if(isCapture)updateCapBar();
+  $("log").innerHTML="";
+  beginSide();
+}
+
+// Patch render() cell click handlers to intercept and broadcast actions
+// Store originals once at script load time
+const _origMove=move,_origFire=fire,_origCallStrike=callStrike;
+const _origSelfAbility=selfAbility,_origCellAbility=cellAbility;
+const _origTeleport=teleport,_origTitanAbility=titanAbility,_origEndTurnNet=endTurn;
+let _netProxyInstalled=false;
+
+function netInstallClickProxy(){
+  if(_netProxyInstalled)return;
+  _netProxyInstalled=true;
+
+  function netAct(msg, localFn){
+    if(!net.active){localFn();return;}
+    if(S.side!==net.mySide)return; // not our team's turn
+    // Check unit ownership
+    const u=S.units.find(x=>x.u===msg.uid);
+    if(u&&net.myPeerId&&u.owner!==net.myPeerId)return; // not our unit
+    if(net.role==='host'){
+      localFn();
+    } else {
+      net.send(msg);
+    }
+  }
+
+  window.move=function(u,x,y){
+    netAct({type:'action',action:'move',uid:u.u,x,y}, ()=>_origMove(u,x,y));
+  };
+  window.fire=function(u,t){
+    netAct({type:'action',action:'fire',uid:u.u,tid:t.u}, ()=>_origFire(u,t));
+  };
+  window.callStrike=function(u,x,y){
+    netAct({type:'action',action:'orb',uid:u.u,x,y}, ()=>_origCallStrike(u,x,y));
+  };
+  window.selfAbility=function(u){
+    netAct({type:'action',action:'selfAbility',uid:u.u}, ()=>_origSelfAbility(u));
+  };
+  window.cellAbility=function(u,x,y){
+    netAct({type:'action',action:'cellAbility',uid:u.u,x,y}, ()=>_origCellAbility(u,x,y));
+  };
+  window.teleport=function(u){
+    netAct({type:'action',action:'teleport',uid:u.u}, ()=>_origTeleport(u));
+  };
+  window.titanAbility=function(u,slot){
+    netAct({type:'action',action:'titanAbility',uid:u.u,slot}, ()=>_origTitanAbility(u,slot));
+  };
+  window.endTurn=function(){
+    if(net.active&&S.side!==net.mySide)return;
+    if(net.active){
+      // Mark my units as spent
+      const myPeer=net.myPeerId;
+      if(myPeer)alive(S.side).filter(u=>u.owner===myPeer).forEach(u=>{u.moved=true;u.acted=true;});
+      act=null;sel=null;
+      if(net.role==='host'){
+        afterAction();
+      } else {
+        net.send({type:'endturn'});
+      }
+      return;
+    }
+    _origEndTurnNet();
+  };
+  window.finish=function(w){
+    if(S&&S.over)return;
+    S.over=true;S.winner=w;
+    if(net.active)net.send({type:'finish',winner:w});
+    _netOrigFinish(w);
+  };
+}
+
+// ── NICK LABELS in render ─────────────────────────────
+function netNickLabel(u){
+  if(!net.active)return '';
+  // find nick for this unit's side
+  const nick=net.mySide===u.side?net.nick:
+    (Object.values(net.guests).find(g=>g.side===u.side)||{}).nick||'';
+  return nick?'<span class="nick-over-tok">'+nick+'</span>':'';
+}
+
+// ── HOST LOBBY UI ─────────────────────────────────────
+function showNetHost(){
+  $("modeSelect").style.display="none";
+  $("netHost").style.display="block";
+  net.lobbySettings={map:'plains',bannedRobots:new Set(),bannedWeapons:new Set(),
+    bannedUltWeapons:new Set(),bannedUlts:new Set(),robotId:null,wid:null};
+
+  // map picker
+  const mp=$("hostMapPick");mp.innerHTML="";
+  Object.entries(MAPS).forEach(([k,m])=>{
+    const b=document.createElement("button");b.type="button";b.className="wo";
+    b.innerHTML="<b>"+m.n+"</b><small>"+m.sub+"</small>";
+    b.onclick=()=>{
+      net.lobbySettings.map=k;
+      mp.querySelectorAll("button").forEach(x=>{x.classList.remove("sel");x.setAttribute("aria-pressed","false");});
+      b.classList.add("sel");b.setAttribute("aria-pressed","true");
+    };
+    if(k==="plains"){b.classList.add("sel");b.setAttribute("aria-pressed","true");net.lobbySettings.map="plains";}
+    mp.appendChild(b);
+  });
+
+  // ban robots
+  const br=$("hostBanRobots");br.innerHTML="";
+  IDS.forEach(id=>{
+    const b=document.createElement("button");b.type="button";b.className="ban-btn";
+    b.textContent=R[id].n;
+    b.onclick=()=>{
+      if(net.lobbySettings.bannedRobots.has(id)){net.lobbySettings.bannedRobots.delete(id);b.classList.remove("banned");}
+      else{net.lobbySettings.bannedRobots.add(id);b.classList.add("banned");}
+    };
+    br.appendChild(b);
+  });
+
+  // ban normal weapons
+  const bw=$("hostBanWeapons");bw.innerHTML="";
+  Object.entries(WPN).forEach(([k,w])=>{
+    if(w.only)return;
+    const b=document.createElement("button");b.type="button";b.className="ban-btn";
+    b.textContent=w.n;
+    b.onclick=()=>{
+      if(net.lobbySettings.bannedWeapons.has(k)){net.lobbySettings.bannedWeapons.delete(k);b.classList.remove("banned");}
+      else{net.lobbySettings.bannedWeapons.add(k);b.classList.add("banned");}
+    };
+    bw.appendChild(b);
+  });
+
+  // ban ult weapons
+  const buw=$("hostBanUltWeapons");buw.innerHTML="";
+  Object.entries(WPN).forEach(([k,w])=>{
+    if(w.only)return;
+    const uw=ULTW(w);
+    const b=document.createElement("button");b.type="button";b.className="ban-btn";
+    b.style.color="#D4AF37";b.style.borderColor="#7A6220";
+    b.innerHTML="★ "+w.n+" <small style='font-size:10px'>("+uw.d+" ур · перез "+uw.rl+")</small>";
+    b.onclick=()=>{
+      const uk="U:"+k;
+      if(net.lobbySettings.bannedUltWeapons.has(uk)){net.lobbySettings.bannedUltWeapons.delete(uk);b.classList.remove("banned");}
+      else{net.lobbySettings.bannedUltWeapons.add(uk);b.classList.add("banned");}
+    };
+    buw.appendChild(b);
+  });
+
+  // ban ult robots
+  const bu=$("hostBanUlts");bu.innerHTML="";
+  IDS.forEach(id=>{
+    const b=document.createElement("button");b.type="button";b.className="ban-btn";
+    b.style.color="#D4AF37";b.style.borderColor="#7A6220";
+    b.innerHTML="★ "+R[id].n;
+    b.onclick=()=>{
+      if(net.lobbySettings.bannedUlts.has(id)){net.lobbySettings.bannedUlts.delete(id);b.classList.remove("banned");}
+      else{net.lobbySettings.bannedUlts.add(id);b.classList.add("banned");}
+    };
+    bu.appendChild(b);
+  });
+}
+
+// Called when lobby screen opens — builds robot picker respecting bans
+function renderHostRobotPicker(){
+  const rp=$("hostRobotPick");rp.innerHTML="";
+  net.lobbySettings.robotId=null;net.lobbySettings.wid=null;
+  $("hostWepSection").style.display="none";
+
+  IDS.filter(id=>!net.lobbySettings.bannedRobots.has(id)).forEach(id=>{
+    const b=R[id];
+    // wrapper
+    const wrap=document.createElement("div");wrap.style.cssText="display:contents";
+
+    // normal robot button
+    const el=document.createElement("button");el.type="button";
+    el.className="pick";el.setAttribute("aria-pressed","false");
+    el.dataset.rid=id;el.dataset.ult="0";
+    el.innerHTML='<span class="pickhead"><span class="av">'+ico(id,17)+
+      '</span><span class="pn"><b>'+b.n+'</b><small>'+b.c+'</small></span></span>';
+    el.onclick=()=>hostPickRobot(id,false);
+    rp.appendChild(el);
+
+    // ult robot button (if not banned)
+    if(!net.lobbySettings.bannedUlts.has(id)){
+      const eu=document.createElement("button");eu.type="button";
+      eu.className="pick";eu.style.cssText="border-color:#7A6220;";
+      eu.setAttribute("aria-pressed","false");
+      eu.dataset.rid=id;eu.dataset.ult="1";
+      eu.innerHTML='<span class="pickhead"><span class="av" style="background:#2A2109;color:#D4AF37">'+ico(id,17)+
+        '</span><span class="pn"><b style="color:#D4AF37">★ '+b.n+'</b><small style="color:#D4AF37">ULTIMATE · '+ULTPERK[id]+'</small></span></span>';
+      eu.onclick=()=>hostPickRobot(id,true);
+      rp.appendChild(eu);
+    }
+  });
+}
+
+function hostPickRobot(id,isUlt){
+  net.lobbySettings.robotId=id;
+  net.lobbySettings.useUlt=isUlt;
+  // visually select
+  document.querySelectorAll("#hostRobotPick button").forEach(x=>{
+    const match=x.dataset.rid===id&&x.dataset.ult===(isUlt?"1":"0");
+    x.classList.toggle("sel",match);x.setAttribute("aria-pressed",String(match));
+  });
+  $("hostWepSection").style.display="";
+  renderHostWepPicker(id,isUlt);
+  checkHostReady();
+}
+
+function renderHostWepPicker(robotId,isUlt){
+  const wp=$("hostWepPick");wp.innerHTML="";
+  const bannedW=net.lobbySettings.bannedWeapons;
+  const bannedUW=net.lobbySettings.bannedUltWeapons;
+  net.lobbySettings.wid=null;
+
+  // normal weapons
+  armory(robotId).filter(k=>!bannedW.has(k)).forEach(k=>{
+    const w=WPN[k];
+    const nat=k===NAT[robotId];
+    const bt=document.createElement("button");bt.type="button";
+    bt.className="wo"+(nat?" sel":"");bt.setAttribute("aria-pressed",String(nat));
+    bt.innerHTML="<b>"+w.n+(nat?" ★":"")+"</b>"+
+      "<small>урон "+w.d+" · дальн "+w.r+" · перез "+w.rl+"</small>"+
+      "<small class='wtrait'>◆ "+trait(w)+"</small>";
+    bt.onclick=()=>{
+      net.lobbySettings.wid=k;
+      wp.querySelectorAll("button").forEach(x=>{x.classList.remove("sel");x.setAttribute("aria-pressed","false");});
+      bt.classList.add("sel");bt.setAttribute("aria-pressed","true");
+      checkHostReady();
+    };
+    if(nat){net.lobbySettings.wid=k;}
+    wp.appendChild(bt);
+  });
+
+  // ult weapons — shown only if robot ult not banned and isUlt selected
+  // but always show ult weapons so host can pick ult weapon even with normal robot
+  armory(robotId).filter(k=>!bannedUW.has("U:"+k)).forEach(k=>{
+    const uw=ULTW(WPN[k]);const uk="U:"+k;
+    const bt=document.createElement("button");bt.type="button";bt.className="wo woult";
+    bt.setAttribute("aria-pressed","false");
+    bt.innerHTML="<b style='color:#D4AF37'>★ "+WPN[k].n+"</b>"+
+      "<small style='color:#D4AF37'>урон "+uw.d+" · дальн "+uw.r+" · перез "+uw.rl+" · ULTIMATE</small>"+
+      "<small class='wtrait' style='color:#D4AF37'>◆ "+trait(WPN[k])+"</small>";
+    bt.onclick=()=>{
+      net.lobbySettings.wid=uk;
+      wp.querySelectorAll("button").forEach(x=>{x.classList.remove("sel");x.setAttribute("aria-pressed","false");});
+      bt.classList.add("sel");bt.setAttribute("aria-pressed","true");
+      checkHostReady();
+    };
+    wp.appendChild(bt);
+  });
+}
+
+function checkHostReady(){
+  netUpdateHostLobby();
+}
+
+function netUpdateHostLobby(){
+  const hostRobId=net.lobbySettings.robotId;
+  const hostWid=net.lobbySettings.wid;
+  const wLabel=w=>{if(!w)return '';if(w.startsWith('U:')){const k=w.slice(2);return '★ '+(WPN[k]?WPN[k].n:k);}return WPN[w]?WPN[w].n:w;};
+  const hostCard='<div class="lobby-player'+(hostRobId?' ready':'')+'">'+
+    '<span class="lp-nick">'+net.nick+' (вы · хост)</span>'+
+    '<span class="lp-rob">'+(hostRobId?R[hostRobId].n+(hostWid?' · '+wLabel(hostWid):''):'выбирает...')+'</span></div>';
+  $("lobbyListA").innerHTML=hostCard;
+  $("lobbyListB").innerHTML="";
+  let allReady=!!hostRobId&&!!hostWid;
+  Object.values(net.guests).forEach(g=>{
+    const robName=g.robotId?(R[g.robotId]?R[g.robotId].n:'?'):'выбирает...';
+    const card='<div class="lobby-player'+(g.ready?' ready':'')+'">'+
+      '<span class="lp-nick">'+(g.nick||'...')+'</span>'+
+      '<span class="lp-rob">'+robName+(g.wid?' · '+wLabel(g.wid):'')+'</span></div>';
+    if(g.side===0)$("lobbyListA").innerHTML+=card;
+    else $("lobbyListB").innerHTML+=card;
+    if(!g.ready)allReady=false;
+  });
+  $("hostStart").disabled=!allReady;
+}
+
+// ── GUEST LOBBY UI ────────────────────────────────────
+let guestState={side:-1,robotId:null,wid:null,useUlt:false};
+
+function showNetGuest(roomId){
+  $("modeSelect").style.display="none";
+  $("netGuest").style.display="block";
+  net.role='guest';
+  net.setStatus('guestStatus','Подключаемся к хосту...','');
+  net.initPeer(myId=>{
+    const c=net.peer.connect(roomId,{reliable:true});
+    net.conn=c;
+    c.on('open',()=>{
+      net.setStatus('guestStatus','Подключено! Получаем настройки лобби...','ok');
+      // Request lobbyInfo from host in case it was sent before we were ready
+      c.send({type:'requestLobbyInfo'});
+      // Retry request if no response in 2 seconds
+      const retryTimer=setTimeout(()=>{
+        if(c.open&&!net.guestBans)c.send({type:'requestLobbyInfo'});
+      },2000);
+    });
+    c.on('data',msg=>net.onMessage(msg,c));
+    c.on('close',()=>net.setStatus('guestStatus','Соединение разорвано','err'));
+    c.on('error',e=>net.setStatus('guestStatus','Ошибка: '+e.message,'err'));
+  });
+}
+
+function renderGuestRobotPicker(bannedRobots,bannedUlts){
+  bannedUlts=bannedUlts||[];
+  $("guestRobotSection").style.display="";
+  $("guestWepSection").style.display="none";
+  const pick=$("guestRobotPick");pick.innerHTML="";
+  IDS.filter(id=>!bannedRobots.includes(id)).forEach(id=>{
+    const b=R[id];
+    // normal robot
+    const el=document.createElement("button");el.type="button";
+    el.className="pick";el.setAttribute("aria-pressed","false");
+    el.dataset.rid=id;el.dataset.ult="0";
+    el.innerHTML='<span class="pickhead"><span class="av">'+ico(id,17)+
+      '</span><span class="pn"><b>'+b.n+'</b><small>'+b.c+'</small></span></span>';
+    el.onclick=()=>guestPickRobot(id,false);
+    pick.appendChild(el);
+    // ult robot (if not banned)
+    if(!bannedUlts.includes(id)){
+      const eu=document.createElement("button");eu.type="button";
+      eu.className="pick";eu.style.cssText="border-color:#7A6220;";
+      eu.setAttribute("aria-pressed","false");
+      eu.dataset.rid=id;eu.dataset.ult="1";
+      eu.innerHTML='<span class="pickhead"><span class="av" style="background:#2A2109;color:#D4AF37">'+ico(id,17)+
+        '</span><span class="pn"><b style="color:#D4AF37">★ '+b.n+'</b><small style="color:#D4AF37">ULTIMATE · '+ULTPERK[id]+'</small></span></span>';
+      eu.onclick=()=>guestPickRobot(id,true);
+      pick.appendChild(eu);
+    }
+  });
+}
+
+function guestPickRobot(id,isUlt){
+  guestState.robotId=id;guestState.useUlt=isUlt;guestState.wid=NAT[id];
+  document.querySelectorAll("#guestRobotPick button").forEach(x=>{
+    const match=x.dataset.rid===id&&x.dataset.ult===(isUlt?"1":"0");
+    x.classList.toggle("sel",match);x.setAttribute("aria-pressed",String(match));
+  });
+  const bw=(net.guestBans&&net.guestBans.bannedWeapons)||[];
+  const bu=(net.guestBans&&net.guestBans.bannedUlts)||[];
+  renderGuestWepPicker(id,bw,bu);
+  checkGuestReady();
+}
+
+function renderGuestWepPicker(robotId,bannedWeapons,bannedUlts){
+  bannedWeapons=bannedWeapons||[];
+  const bannedUltW=(net.guestBans&&net.guestBans.bannedUltWeapons)||[];
+  $("guestWepSection").style.display="";
+  const wep=$("guestWepPick");wep.innerHTML="";
+  armory(robotId).filter(k=>!bannedWeapons.includes(k)).forEach(k=>{
+    const w=WPN[k];
+    const bt=document.createElement("button");bt.type="button";
+    bt.className="wo"+(k===NAT[robotId]?" sel":"");
+    bt.setAttribute("aria-pressed",String(k===NAT[robotId]));
+    bt.innerHTML="<b>"+w.n+(k===NAT[robotId]?" ★":"")+"</b>"+
+      "<small>урон "+w.d+" · дальн "+w.r+" · перез "+w.rl+"</small>"+
+      "<small class='wtrait'>◆ "+trait(w)+"</small>";
+    bt.onclick=()=>{
+      guestState.wid=k;
+      wep.querySelectorAll("button").forEach(x=>{x.classList.remove("sel");x.setAttribute("aria-pressed","false");});
+      bt.classList.add("sel");bt.setAttribute("aria-pressed","true");
+      checkGuestReady();
+    };
+    wep.appendChild(bt);
+  });
+  // Ult weapons (gold, filtered by bannedUltWeapons)
+  const ultBanned=(net.guestBans&&net.guestBans.bannedUlts)||[];
+  if(!ultBanned.includes(robotId)){
+    armory(robotId).filter(k=>!bannedUltW.includes("U:"+k)).forEach(k=>{
+      const uw=ULTW(WPN[k]);const uk="U:"+k;
+      const bt=document.createElement("button");bt.type="button";
+      bt.className="wo woult";
+      bt.setAttribute("aria-pressed","false");
+      bt.innerHTML="<b>★ "+WPN[k].n+"</b>"+
+        "<small>урон "+uw.d+" · дальн "+uw.r+" · перез "+uw.rl+" · ULTIMATE</small>"+
+        "<small class='wtrait' style='color:#D4AF37'>◆ "+trait(WPN[k])+"</small>";
+      bt.onclick=()=>{
+        guestState.wid=uk;
+        wep.querySelectorAll("button").forEach(x=>{x.classList.remove("sel");x.setAttribute("aria-pressed","false");});
+        bt.classList.add("sel");bt.setAttribute("aria-pressed","true");
+        checkGuestReady();
+      };
+      wep.appendChild(bt);
+    });
+  }
+}
+
+function checkGuestReady(){
+  $("guestReady").disabled=!(guestState.side>=0&&guestState.robotId&&guestState.wid&&
+    $("guestNick").value.trim());
+}
+
+// ── WIRE UP BUTTONS ───────────────────────────────────
+$("pickNet").onclick=()=>{
+  // Check if URL has ?room= param → go as guest
+  const params=new URLSearchParams(location.search);
+  const room=params.get("room");
+  if(room){showNetGuest(room);}
+  else{showNetHost();}
+};
+
+$("hostBack").onclick=()=>{net.reset();$("netHost").style.display="none";$("modeSelect").style.display="block";};
+$("lobbyBack").onclick=()=>{net.reset();$("netLobby").style.display="none";$("modeSelect").style.display="block";};
+$("guestBack").onclick=()=>{net.reset();$("netGuest").style.display="none";$("modeSelect").style.display="block";};
+
+$("hostCreate").onclick=()=>{
+  const nick=$("hostNick").value.trim();
+  if(!nick){net.setStatus("hostStatus","Введите ник!","err");return;}
+  net.nick=nick;net.role="host";net.mySide=0;
+  net.setStatus("hostStatus","Создаём лобби...","");
+  net.initPeer(id=>{
+    const url=location.origin+location.pathname+"?room="+id;
+    $("hostLink").textContent=url;
+    $("netHost").style.display="none";
+    $("netLobby").style.display="block";
+    renderHostRobotPicker();
+    // orb picker
+    net.lobbySettings.orb="none";net.lobbySettings.titans=false;
+    const orbPick=$("lobbyOrbPick");orbPick.innerHTML="";
+    [{k:"none",n:"Нет"},{k:"barrage",n:"Бомбардировка"},{k:"emp",n:"ЭМИ"},{k:"supply",n:"Снабжение"},{k:"smoke",n:"Дымовая"}]
+    .forEach(({k,n})=>{
+      const b=document.createElement("button");b.type="button";
+      b.className="ban-btn"+(k==="none"?" banned":"");b.textContent=n;
+      b.onclick=()=>{
+        net.lobbySettings.orb=k;
+        orbPick.querySelectorAll("button").forEach(x=>x.classList.remove("banned"));
+        b.classList.add("banned");
+      };
+      orbPick.appendChild(b);
+    });
+    // titan toggle + type picker
+    const tt=$("lobbyTitanToggle");tt.innerHTML="";
+    const tp=$("lobbyTitanPick");tp.innerHTML="";
+    net.lobbySettings.titanType="random";
+    // titan type buttons
+    [{k:"random",n:"Случайный"},{k:"atlas",n:"Atlas"},{k:"mull",n:"Mull"},{k:"fort",n:"Fort"}]
+    .forEach(({k,n})=>{
+      const b=document.createElement("button");b.type="button";
+      b.className="ban-btn"+(k==="random"?" banned":"");b.textContent=n;
+      b.onclick=()=>{
+        net.lobbySettings.titanType=k;
+        tp.querySelectorAll("button").forEach(x=>x.classList.remove("banned"));
+        b.classList.add("banned");
+      };
+      tp.appendChild(b);
+    });
+    const tb=document.createElement("button");tb.type="button";tb.className="ban-btn";
+    tb.textContent="Разрешить титанов";
+    tb.onclick=()=>{
+      net.lobbySettings.titans=!net.lobbySettings.titans;
+      tb.classList.toggle("banned",net.lobbySettings.titans);
+      tb.textContent=net.lobbySettings.titans?"Титаны: ВКЛ":"Разрешить титанов";
+      tp.style.display=net.lobbySettings.titans?"":"none";
+    };
+    tt.appendChild(tb);
+    netUpdateHostLobby();
+    net.peer.on("connection",conn=>{
+      conn.on("open",()=>{
+        const sendLobbyInfo=()=>{
+          if(conn.open)conn.send({type:"lobbyInfo",settings:{
+            bannedRobots:[...net.lobbySettings.bannedRobots],
+            bannedWeapons:[...net.lobbySettings.bannedWeapons],
+            bannedUltWeapons:[...net.lobbySettings.bannedUltWeapons],
+            bannedUlts:[...net.lobbySettings.bannedUlts]
+          }});
+        };
+        sendLobbyInfo();
+        setTimeout(sendLobbyInfo,600);
+        setTimeout(sendLobbyInfo,1800);
+        conn.on("data",msg=>{
+          if(msg.type==="hello"){
+            const guestPeerId=msg.payload.peerId||conn.peer;
+            net.guests[conn.peer]={conn,nick:msg.payload.nick,side:msg.payload.side,
+              robotId:msg.payload.robotId,wid:msg.payload.wid,
+              useUlt:msg.payload.useUlt,ready:msg.payload.ready,
+              peerId:guestPeerId};
+            netUpdateHostLobby();
+          } else if(msg.type==="requestLobbyInfo"){
+            // Guest is asking for lobby settings again
+            if(conn.open)conn.send({type:"lobbyInfo",settings:{
+              bannedRobots:[...net.lobbySettings.bannedRobots],
+              bannedWeapons:[...net.lobbySettings.bannedWeapons],
+              bannedUltWeapons:[...net.lobbySettings.bannedUltWeapons],
+              bannedUlts:[...net.lobbySettings.bannedUlts]
+            }});
+          } else net.onMessage(msg,conn);
+        });
+        conn.on("close",()=>{delete net.guests[conn.peer];netUpdateHostLobby();});
+      });
+    });
+  });
+};
+
+$("hostCopyLink").onclick=()=>{
+  navigator.clipboard.writeText($("hostLink").textContent)
+    .then(()=>net.setStatus("hostStatus","Ссылка скопирована!","ok"))
+    .catch(()=>{});
+};
+
+$("hostStart").onclick=()=>{
+  const mapKey=net.lobbySettings.map;
+  const M=MAPS[mapKey];
+  const guests=Object.values(net.guests);
+  const hostRobotId=net.lobbySettings.robotId||IDS[0];
+  const hostWid=net.lobbySettings.wid||NAT[hostRobotId];
+  uid=0;
+  const orbKey=net.lobbySettings.orb||"none";
+  const orbVal=orbKey==="none"?0:1;
+  S={map:M,turn:1,side:0,first:0,units:[],mines:{0:[],1:[]},domes:[],
+    summon:{0:net.lobbySettings.titans,1:net.lobbySettings.titans},over:false,
+    wrecks:[],orb:{0:orbVal,1:orbVal},strikes:[],
+    smoke:[],turrets:[],respawns:[],weather:"clear",cap:{holder:-1,ticks:0}};
+  const sA=spawnCells(M,0,1+guests.filter(g=>g.side===0).length);
+  const sB=spawnCells(M,1,guests.filter(g=>g.side===1).length);
+  let iA=0,iB=0;
+  const hostUnit=mk(hostRobotId,0,sA[iA++]||M.A[0],hostWid);
+  if(net.lobbySettings.useUlt)makeUlt(hostUnit);
+  hostUnit.nick=net.nick;
+  hostUnit.owner=net.peer.id;  // host owns this unit
+  S.units.push(hostUnit);
+  guests.forEach(g=>{
+    const side=g.side>=0?g.side:1;
+    const sp=side===0?(sA[iA++]||M.A[0]):(sB[iB++]||M.B[0]);
+    const gu=mk(g.robotId||IDS[0],side,sp,g.wid||NAT[g.robotId||IDS[0]]);
+    if(g.useUlt)makeUlt(gu);
+    gu.nick=g.nick||"Гость";
+    gu.owner=g.peerId||g.conn.peer;  // use confirmed peer ID
+    S.units.push(gu);
+  });
+  cfg={mode:"pvp",map:mapKey,size:1,campaign:false,weather:"clear",
+    orb:orbKey==="none"?"barrage":orbKey,
+    titan:net.lobbySettings.titanType||"random",
+    bannedRobots:[...net.lobbySettings.bannedRobots],
+    bannedWeapons:[...net.lobbySettings.bannedWeapons],
+    bannedUltWeapons:[...net.lobbySettings.bannedUltWeapons],
+    bannedUlts:[...net.lobbySettings.bannedUlts]};
+  guests.forEach(g=>{
+    g.conn.send({type:"start",S:net.serializeS(S),cfg,
+      mySide:g.side>=0?g.side:1,
+      myPeerId:g.conn.peer});
+  });
+  net.active=true;net.mySide=0;
+  net.myPeerId=net.peer.id;  // host's own peer ID
+  $("netLobby").style.display="none";
+  netStartBattle();
+};
+
+// Guest team buttons
+$("guestTeamA").onclick=()=>{
+  guestState.side=0;
+  $("guestTeamA").className="on";$("guestTeamB").className="";
+  checkGuestReady();
+};
+$("guestTeamB").onclick=()=>{
+  guestState.side=1;
+  $("guestTeamB").className="on b";$("guestTeamA").className="";
+  checkGuestReady();
+};
+
+$("guestNick").oninput=checkGuestReady;
+
+$("guestReady").onclick=()=>{
+  net.nick=$("guestNick").value.trim();
+  const payload={type:"hello",payload:{
+    nick:net.nick,side:guestState.side,robotId:guestState.robotId,
+    wid:guestState.wid,useUlt:guestState.useUlt,ready:true,
+    peerId:net.peer.id}};  // guest tells host its own peer ID
+  net.conn.send(payload);
+  $("guestReady").textContent="Ожидаем начала...";
+  $("guestReady").disabled=true;
+  net.mySide=guestState.side;
+  net.setStatus("guestStatus","Выбор отправлен, ждём хоста!","ok");
+};
+
+// Auto-detect guest URL on load
+(function(){
+  const params=new URLSearchParams(location.search);
+  if(params.get("room")){
+    // redirect pickNet click automatically
+    document.addEventListener("DOMContentLoaded",()=>{});
+    // show guest screen right away if room param present
+    setTimeout(()=>{
+      const room=params.get("room");
+      if(room){
+        $("modeSelect").style.display="none";
+        showNetGuest(room);
+      }
+    },200);
+  }
+})();
+
+</script>
+</body>
+</html>
