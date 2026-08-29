@@ -2558,7 +2558,20 @@ const net={
       net.setStatus('guestStatus','Не удалось подключиться за 12 сек. Возможно, сеть блокирует сервер. Попробуйте мобильный интернет или VPN.','err');
     },12000);
     try{
-      net.ably=new Ably.Realtime({key:ABLY_KEY,clientId:net.myPeerId});
+      net.ably=new Ably.Realtime({
+        key:ABLY_KEY,
+        clientId:net.myPeerId,
+        // Держим соединение живым и быстро восстанавливаем после обрыва.
+        // Пинг чаще, чем срабатывает 25-сек. таймер простоя — чтобы вкладка в фоне не роняла связь.
+        heartbeatInterval:10000,
+        // Быстрее пробуем переподключиться после разрыва (по умолчанию 15 сек).
+        disconnectedRetryTimeout:2000,
+        suspendedRetryTimeout:5000,
+        // Дольше держим сессию восстанавливаемой, пока вкладка «спит».
+        realtimeRequestTimeout:15000,
+        // Не закрывать соединение, когда вкладка уходит в фон / сворачивается.
+        closeOnUnload:false
+      });
     }catch(e){
       clearTimeout(net._connectTimer);
       net.setStatus('hostStatus','Ошибка запуска сети: '+e.message,'err');
@@ -2570,6 +2583,31 @@ const net={
       done=true;
       clearTimeout(net._connectTimer);
       onReady();
+    });
+    // Восстановление после обрыва связи (не первое подключение, а именно возврат).
+    net.ably.connection.on('connected',()=>{
+      if(!net.active)return;
+      // Связь вернулась во время боя. Убираем плашку "связь потеряна".
+      net.setStatus('hostStatus','Связь восстановлена','ok');
+      net.setStatus('guestStatus','Связь восстановлена','ok');
+      // Хост заново рассылает текущее состояние, чтобы гость догнался после разрыва.
+      if(net.role==='host'&&S){
+        setTimeout(function(){try{net.broadcastSnapshot();}catch(e){}},300);
+      }else if(net.role==='guest'){
+        // Гость просит у хоста свежий снапшот.
+        setTimeout(function(){try{net.send({type:'resync',_from:net.myPeerId});}catch(e){}},300);
+      }
+    });
+    // Связь оборвалась — показываем понятную плашку, но НЕ сдаёмся: Ably сам переподключается.
+    net.ably.connection.on('disconnected',()=>{
+      if(!net.active)return;
+      net.setStatus('hostStatus','Связь потеряна, переподключаемся...','');
+      net.setStatus('guestStatus','Связь потеряна, переподключаемся...','');
+    });
+    net.ably.connection.on('suspended',()=>{
+      if(!net.active)return;
+      net.setStatus('hostStatus','Связь потеряна, переподключаемся...','');
+      net.setStatus('guestStatus','Связь потеряна, переподключаемся...','');
     });
     net.ably.connection.on('failed',(e)=>{
       if(done)return;
@@ -2630,6 +2668,11 @@ const net={
       S=net.deserializeS(msg.S);cfg=msg.cfg;
       net.mySide=msg.mySide;net.active=true;
       netStartBattle();
+    }
+    else if(msg.type==='resync'){
+      // Гость переподключился и просит свежее состояние. Хост шлёт снапшот.
+      if(net.role!=='host')return;
+      if(S)net.broadcastSnapshot();
     }
     else if(msg.type==='action'){
       if(net.role!=='host')return;
