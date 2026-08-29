@@ -769,6 +769,10 @@ return module.exports;
 
 <script>
 "use strict";
+// Версия сборки — печатается в консоль при загрузке. Позволяет точно понять,
+// какая версия реально загружена в браузере (не старая ли из кэша).
+const BUILD_VERSION="v2026-08-29-teamB";
+console.log("%c КИБЕР-АРЕНА сборка "+BUILD_VERSION,"background:#1a1a2e;color:#4fd1c5;font-size:14px;padding:4px 8px;");
 const LET="ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 const cn=(a,b)=>Math.max(Math.abs(a.x-b.x),Math.abs(a.y-b.y));
 const kk=(x,y)=>x+","+y;
@@ -2594,6 +2598,13 @@ const net={
     }
     net.ably.connection.on('connected',()=>{
       if(done)return;
+      // Keepalive: раз в 15 секунд пингуем сервер, чтобы связь не считалась «простаивающей»
+      // и не обрывалась по таймауту бездействия (~25-30с). Работает и у хоста, и у гостя.
+      if(!net._keepalive){
+        net._keepalive=setInterval(function(){
+          try{if(net.ably&&net.ably.connection&&net.ably.connection.state==='connected')net.ably.connection.ping();}catch(e){}
+        },15000);
+      }
       done=true;
       clearTimeout(net._connectTimer);
       onReady();
@@ -2750,6 +2761,7 @@ const net={
 
   reset(){
     if(net._connectTimer){clearTimeout(net._connectTimer);net._connectTimer=null;}
+    if(net._keepalive){clearInterval(net._keepalive);net._keepalive=null;}
     if(net._lobbyAsk){clearInterval(net._lobbyAsk);net._lobbyAsk=null;}
     if(net._snapHeartbeat){clearInterval(net._snapHeartbeat);net._snapHeartbeat=null;}
     net._snapVer=0;net._lastSnapVer=null;net._switchPending=false;
@@ -2958,10 +2970,18 @@ function netUpdateHostLobby(){
   $('hostStart').disabled=!allReady;
 }
 
-let guestState={side:-1,robotId:null,wid:null,useUlt:false};
+// Хост всегда сторона A, поэтому гость по умолчанию встаёт на сторону B (соперник).
+// Так даже если Кирилл забыл нажать команду или его выбор слетел после переподключения —
+// он всё равно окажется на правильной стороне, а не на одной с хостом.
+let guestState={side:1,robotId:null,wid:null,useUlt:false};
 
 function showNetGuest(roomId){
   $('modeSelect').style.display='none';$('netGuest').style.display='block';
+  // По умолчанию гость на стороне B — подсвечиваем кнопку B сразу.
+  guestState.side=1;
+  const gtb=$('guestTeamB'),gta=$('guestTeamA');
+  if(gtb)gtb.className='on b';
+  if(gta)gta.className='';
   net.role='guest';net.setStatus('guestStatus','Подключаемся к серверу...','');
   net.init(()=>{
     net.joinRoom(roomId);
